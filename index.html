@@ -5,10 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PAC-MAN</title>
 <style>
+  /* Import the retro pixel-font from Google Fonts */
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
+  /* Reset all default margins/padding and use border-box sizing so
+     padding/border are included inside element width/height calculations */
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  /* Full-screen black background, centered vertically and horizontally.
+     overflow:hidden prevents scrollbars from the canvas shadow bleeding out */
   body {
     background: #000;
     display: flex;
@@ -20,6 +25,8 @@
     overflow: hidden;
   }
 
+  /* Top HUD bar: score on the left, title in the centre, high score on the right.
+     Width matches the canvas (28 columns × 20px each = 560px) */
   #header {
     display: flex;
     justify-content: space-between;
@@ -30,14 +37,18 @@
     padding: 0 4px;
   }
 
+  /* Score and high-score numbers rendered in gold */
   #score-val, #high-val { color: #FFD700; }
 
+  /* The main game canvas — blue border with layered glow shadows for neon effect */
   #gameCanvas {
     display: block;
     border: 2px solid #1a1aff;
     box-shadow: 0 0 30px #1a1aff88, 0 0 60px #1a1aff44;
   }
 
+  /* Status message shown between game states (e.g. "PRESS SPACE TO START").
+     min-height prevents layout shift when the message is cleared */
   #message {
     color: #FFD700;
     font-size: 14px;
@@ -46,14 +57,16 @@
     letter-spacing: 2px;
     min-height: 30px;
     text-shadow: 0 0 10px #FFD700;
-    animation: blink 1s step-start infinite;
+    animation: blink 1s step-start infinite; /* classic arcade blinking */
   }
 
+  /* step-start blink: jumps instantly between opacity 1 and 0 (no fade) */
   @keyframes blink {
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }
   }
 
+  /* Row of small Pac-Man icons representing remaining lives */
   #lives-row {
     display: flex;
     gap: 10px;
@@ -67,11 +80,13 @@
     margin-right: 4px;
   }
 
+  /* Each life icon is its own small canvas element */
   .life-icon {
     width: 18px;
     height: 18px;
   }
 
+  /* D-pad control layout for mobile — hidden by default on desktop */
   #mobile-controls {
     display: none;
     flex-direction: column;
@@ -80,8 +95,10 @@
     margin-top: 14px;
   }
 
+  /* Each row of the D-pad (up row / left-down-right row) */
   .ctrl-row { display: flex; gap: 6px; }
 
+  /* Individual directional button styling */
   .ctrl-btn {
     width: 52px; height: 52px;
     background: #111;
@@ -90,15 +107,17 @@
     color: #fff;
     font-size: 22px;
     cursor: pointer;
-    user-select: none;
+    user-select: none;           /* prevent text selection on repeated taps */
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 0 10px #1a1aff55;
-    -webkit-tap-highlight-color: transparent;
+    -webkit-tap-highlight-color: transparent; /* remove iOS tap flash */
     transition: background 0.1s;
   }
 
+  /* Visual feedback when a button is pressed */
   .ctrl-btn:active { background: #1a1aff44; }
 
+  /* On small screens, stretch canvas to full width and show the D-pad */
   @media (max-width: 620px) {
     #header { width: 100vw; padding: 0 8px; font-size: 8px; }
     #gameCanvas { width: 100vw !important; height: auto !important; }
@@ -108,14 +127,18 @@
 </head>
 <body>
 
+<!-- ── HUD ─────────────────────────────────────────────────────── -->
 <div id="header">
   <div>SCORE<br><span id="score-val">0</span></div>
+  <!-- Title centred with gold glow -->
   <div style="color:#FFD700; font-size:13px; letter-spacing:4px; text-shadow: 0 0 12px #FFD700;">PAC-MAN</div>
   <div>BEST<br><span id="high-val">0</span></div>
 </div>
 
+<!-- Main game canvas: 28 cols × 20px = 560 wide, 31 rows × 20px = 620 tall -->
 <canvas id="gameCanvas" width="560" height="620"></canvas>
 
+<!-- Life icons drawn as mini canvases so we can render Pac-Man shapes easily -->
 <div id="lives-row">
   <span id="lives-label">LIVES:</span>
   <canvas class="life-icon" id="life1" width="18" height="18"></canvas>
@@ -123,8 +146,10 @@
   <canvas class="life-icon" id="life3" width="18" height="18"></canvas>
 </div>
 
+<!-- Blinking status text shown between rounds -->
 <div id="message">PRESS SPACE TO START</div>
 
+<!-- Mobile D-pad — only visible on touch devices or narrow viewports -->
 <div id="mobile-controls">
   <div class="ctrl-row"><button class="ctrl-btn" id="btn-up">▲</button></div>
   <div class="ctrl-row">
@@ -135,17 +160,36 @@
 </div>
 
 <script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const msgEl = document.getElementById('message');
-const scoreEl = document.getElementById('score-val');
-const highEl = document.getElementById('high-val');
+// ════════════════════════════════════════════════════════════════
+//  CANVAS & DOM REFERENCES
+// ════════════════════════════════════════════════════════════════
 
-// ---- MAP ----
-// 0=empty, 1=wall, 2=dot, 3=power, 4=empty(no dot), 5=ghost house door
-const COLS = 28, ROWS = 31;
-const CELL = 20;
+const canvas  = document.getElementById('gameCanvas');
+const ctx     = canvas.getContext('2d');   // 2D drawing context
+const msgEl   = document.getElementById('message');    // status text element
+const scoreEl = document.getElementById('score-val'); // live score display
+const highEl  = document.getElementById('high-val');  // high-score display
 
+
+// ════════════════════════════════════════════════════════════════
+//  MAP CONSTANTS & TILE LEGEND
+// ════════════════════════════════════════════════════════════════
+//
+//  Tile values stored in MAP_TEMPLATE (and copied into the live `map`):
+//    1 = wall block
+//    2 = small dot  (worth 10 pts)
+//    3 = power pellet (worth 50 pts, triggers frightened mode on ghosts)
+//    4 = empty floor (no collectible — corridors, ghost house interior, tunnels)
+//
+//  The grid is COLS wide and ROWS tall.
+//  Each tile is rendered as a CELL × CELL pixel square on the canvas.
+
+const COLS = 28;   // number of tile columns across the maze
+const ROWS = 31;   // number of tile rows down the maze
+const CELL = 20;   // pixel size of one tile edge (20 × 20 px per tile)
+
+// Master maze layout — deep-copied at game start so dots can be eaten
+// from the working `map` without mutating this original template.
 const MAP_TEMPLATE = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
   [1,2,2,2,2,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2,1],
@@ -161,7 +205,7 @@ const MAP_TEMPLATE = [
   [1,1,1,1,1,1,2,1,1,4,4,4,4,4,4,4,4,4,4,1,1,2,1,1,1,1,1,1],
   [1,1,1,1,1,1,2,1,1,4,1,1,1,4,4,1,1,1,4,1,1,2,1,1,1,1,1,1],
   [1,1,1,1,1,1,2,1,1,4,1,4,4,4,4,4,4,1,4,1,1,2,1,1,1,1,1,1],
-  [4,4,4,4,4,4,2,4,4,4,1,4,4,4,4,4,4,1,4,4,4,2,4,4,4,4,4,4],
+  [4,4,4,4,4,4,2,4,4,4,1,4,4,4,4,4,4,1,4,4,4,2,4,4,4,4,4,4], // ← tunnel row
   [1,1,1,1,1,1,2,1,1,4,1,4,4,4,4,4,4,1,4,1,1,2,1,1,1,1,1,1],
   [1,1,1,1,1,1,2,1,1,4,1,1,1,1,1,1,1,1,4,1,1,2,1,1,1,1,1,1],
   [1,1,1,1,1,1,2,1,1,4,4,4,4,4,4,4,4,4,4,1,1,2,1,1,1,1,1,1],
@@ -180,153 +224,304 @@ const MAP_TEMPLATE = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
 ];
 
-// ---- STATE ----
-let map, score, highScore = 0, lives, gameState, pacman, ghosts;
-let frightTimer = 0, dotCount = 0;
-let animFrame;
 
-// ---- DIRECTIONS ----
-const DIR = { LEFT:[-1,0], RIGHT:[1,0], UP:[0,-1], DOWN:[0,1], NONE:[0,0] };
+// ════════════════════════════════════════════════════════════════
+//  MUTABLE GAME STATE
+// ════════════════════════════════════════════════════════════════
 
+let map;               // working copy of MAP_TEMPLATE (dots removed as eaten)
+let score;             // current round score
+let highScore = 0;     // persists across rounds (session memory only)
+let lives;             // Pac-Man lives remaining
+let gameState;         // 'ready' | 'playing' | 'over' | 'win'
+let pacman;            // Pac-Man entity object  (see spawnEntities)
+let ghosts;            // array of 4 ghost entity objects
+let frightTimer = 0;   // frames remaining in frightened mode (counts down to 0)
+let dotCount    = 0;   // remaining collectible tiles; reaching 0 triggers win
+let animFrame;         // requestAnimationFrame handle (available to cancel if needed)
+
+
+// ════════════════════════════════════════════════════════════════
+//  DIRECTION VECTORS
+// ════════════════════════════════════════════════════════════════
+//
+//  Each direction is a [deltaX, deltaY] pair in tile-space.
+//  Canvas Y increases downward, so UP has a negative deltaY.
+//  Named keys make the code self-documenting (e.g. DIR.LEFT instead of [-1,0]).
+
+const DIR = {
+  LEFT:  [-1,  0],
+  RIGHT: [ 1,  0],
+  UP:    [ 0, -1],   // Y decreases going up on screen
+  DOWN:  [ 0,  1],
+  NONE:  [ 0,  0],
+};
+
+
+// ════════════════════════════════════════════════════════════════
+//  MAP INITIALISATION
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * resetMap — deep-copies MAP_TEMPLATE into the live `map` and counts
+ * every dot and pellet so we know when the level is complete.
+ * Called at the start of each new game to restore all eaten tiles.
+ */
 function resetMap() {
-  map = MAP_TEMPLATE.map(r => [...r]);
+  // Spread each inner row into a new array so mutations don't affect MAP_TEMPLATE
+  map = MAP_TEMPLATE.map(row => [...row]);
+
+  // Count every collectible tile (2 = dot, 3 = power pellet)
   dotCount = 0;
-  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) if(map[r][c]===2||map[r][c]===3) dotCount++;
+  for(let r = 0; r < ROWS; r++) {
+    for(let c = 0; c < COLS; c++) {
+      if(map[r][c] === 2 || map[r][c] === 3) dotCount++;
+    }
+  }
 }
 
+
+// ════════════════════════════════════════════════════════════════
+//  GAME INITIALISATION
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * initGame — full reset called at game-start and after game-over/win.
+ * Restores the maze, zeroes the score, resets lives, and places all entities.
+ */
 function initGame() {
   resetMap();
-  score = 0;
-  lives = 3;
+  score  = 0;
+  lives  = 3;
   scoreEl.textContent = score;
   frightTimer = 0;
-  spawnEntities();
-  updateLives();
+  spawnEntities();   // place Pac-Man and ghosts at their starting positions
+  updateLives();     // redraw the life icons below the canvas
   gameState = 'ready';
   msgEl.textContent = 'PRESS SPACE TO START';
 }
 
+/**
+ * spawnEntities — creates the Pac-Man object and the four ghost objects.
+ * Called both at game start AND after each death so entities respawn
+ * without resetting the maze or the score.
+ */
 function spawnEntities() {
+
+  // ── Pac-Man object ───────────────────────────────────────────
+  //   x, y        — position in tile coordinates (floats for sub-tile movement)
+  //   dir         — current movement direction; applied every frame
+  //   nextDir     — direction queued from player input; applied when the turn is legal
+  //   speed       — tiles moved per frame (~7.2 tiles/sec at 60 fps)
+  //   mouthAngle  — fraction of π that the mouth is open (oscillates between ~0 and 0.35)
+  //   mouthDir    — +1 = opening, -1 = closing
+  //   dead        — true while the death animation plays
+  //   deathTimer  — frame counter driving the death animation
   pacman = {
     x: 13.5, y: 23,
-    dir: DIR.LEFT, nextDir: DIR.LEFT,
-    speed: 0.12, mouthAngle: 0.25, mouthDir: 1,
-    dead: false, deathTimer: 0
+    dir:        DIR.LEFT,
+    nextDir:    DIR.LEFT,
+    speed:      0.12,
+    mouthAngle: 0.25,
+    mouthDir:   1,
+    dead:       false,
+    deathTimer: 0,
   };
+
+  // ── Ghost objects ────────────────────────────────────────────
+  //   name       — identifier; drives individual AI targeting in ghostTarget()
+  //   x, y       — tile position (float)
+  //   dir        — current movement direction vector
+  //   homeX/Y    — spawn coordinates inside the ghost house (unused after spawn)
+  //   color      — fill colour in normal mode
+  //   frightened — true while power pellet is active and ghost is vulnerable
+  //   eaten      — true after Pac-Man eats the ghost; only eyes render during return trip
+  //   speed      — tiles/frame while chasing (frightened speed is 0.06, hardcoded)
+  //   mode       — 'house' | 'scatter' | 'chase'
+  //   modeTimer  — dual-purpose counter:
+  //                  in 'house'          → counts DOWN to 0, then ghost exits
+  //                  in 'scatter/chase'  → counts UP; triggers mode switches at 300 & 600
+  //   px, py     — reserved for future use (previous position for interpolation)
   ghosts = [
-    { name:'blinky', x:13.5, y:11, dir:DIR.LEFT, homeX:13.5, homeY:11, color:'#FF0000', frightened:false, eaten:false, speed:0.1, mode:'scatter', modeTimer:0, px:0, py:0 },
-    { name:'pinky',  x:13.5, y:14, dir:DIR.UP,   homeX:13.5, homeY:14, color:'#FFB8FF', frightened:false, eaten:false, speed:0.09, mode:'house',   modeTimer:120, px:0, py:0 },
-    { name:'inky',   x:11.5, y:14, dir:DIR.UP,   homeX:11.5, homeY:14, color:'#00FFFF', frightened:false, eaten:false, speed:0.09, mode:'house',   modeTimer:240, px:0, py:0 },
-    { name:'clyde',  x:15.5, y:14, dir:DIR.UP,   homeX:15.5, homeY:14, color:'#FFB852', frightened:false, eaten:false, speed:0.09, mode:'house',   modeTimer:360, px:0, py:0 },
+    // Blinky (red)   — exits immediately; directly targets Pac-Man's tile
+    { name:'blinky', x:13.5, y:11, dir:DIR.LEFT, homeX:13.5, homeY:11,
+      color:'#FF0000', frightened:false, eaten:false, speed:0.10,
+      mode:'scatter', modeTimer:0,   px:0, py:0 },
+
+    // Pinky (pink)   — waits 120 frames; targets 4 tiles ahead of Pac-Man
+    { name:'pinky',  x:13.5, y:14, dir:DIR.UP,   homeX:13.5, homeY:14,
+      color:'#FFB8FF', frightened:false, eaten:false, speed:0.09,
+      mode:'house',   modeTimer:120, px:0, py:0 },
+
+    // Inky (cyan)    — waits 240 frames; flanking target using Blinky's position
+    { name:'inky',   x:11.5, y:14, dir:DIR.UP,   homeX:11.5, homeY:14,
+      color:'#00FFFF', frightened:false, eaten:false, speed:0.09,
+      mode:'house',   modeTimer:240, px:0, py:0 },
+
+    // Clyde (orange) — waits 360 frames; chases when far, retreats to corner when close
+    { name:'clyde',  x:15.5, y:14, dir:DIR.UP,   homeX:15.5, homeY:14,
+      color:'#FFB852', frightened:false, eaten:false, speed:0.09,
+      mode:'house',   modeTimer:360, px:0, py:0 },
   ];
 }
 
-// ---- COLLISION ----
+
+// ════════════════════════════════════════════════════════════════
+//  MOVEMENT & COLLISION HELPERS
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * canMove(x, y) — returns true if the tile-space position (x, y) is passable.
+ *
+ * We test all four corners of a slightly-inset bounding box (radius 0.45 tiles)
+ * rather than a single centre point.  This stops entities clipping through wall
+ * corners while still permitting tight corridor turns.
+ */
 function canMove(x, y) {
-  const margin = 0.45;
+  const margin = 0.45;  // half-width of the collision box (just under half a tile)
+
   const corners = [
-    [x - margin, y - margin],
-    [x + margin, y - margin],
-    [x - margin, y + margin],
-    [x + margin, y + margin],
+    [x - margin, y - margin],  // top-left corner
+    [x + margin, y - margin],  // top-right corner
+    [x - margin, y + margin],  // bottom-left corner
+    [x + margin, y + margin],  // bottom-right corner
   ];
+
   for(const [cx, cy] of corners) {
-    let col = Math.floor(cx);
-    let row = Math.floor(cy);
+    const col = Math.floor(cx);
+    const row = Math.floor(cy);
+    // Corners that fall outside the grid (e.g. at tunnel exits) are skipped
     if(row < 0 || row >= ROWS || col < 0 || col >= COLS) continue;
+    // If any corner lands inside a wall tile, movement is blocked
     if(map[row][col] === 1) return false;
   }
-  return true;
+  return true; // all four corners are in passable tiles
 }
 
+/**
+ * wrapX(x) — horizontal tunnel wrap-around.
+ *
+ * Row 14 (the tunnel row) uses tile value 4 at both far ends.
+ * Exiting the right edge teleports the entity to the left side, and vice-versa.
+ */
 function wrapX(x) {
-  if(x < -0.5) return COLS - 0.5;
-  if(x > COLS - 0.5) return 0.5;
+  if(x < -0.5)        return COLS - 0.5;  // exited left edge → reappear on right
+  if(x > COLS - 0.5)  return 0.5;         // exited right edge → reappear on left
   return x;
 }
 
-// ---- PACMAN UPDATE ----
+
+// ════════════════════════════════════════════════════════════════
+//  PAC-MAN UPDATE  (runs every frame while the game is 'playing')
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * updatePacman — handles movement, direction buffering, dot eating, and
+ *                mouth animation for Pac-Man.
+ */
 function updatePacman() {
+  // While the death animation is playing, just advance the timer and bail out
   if(pacman.dead) {
     pacman.deathTimer++;
     return;
   }
-  // Try next dir first
+
+  // ── Buffered direction change ────────────────────────────────
+  // The player can press a new direction before the current tile centre is reached.
+  // We test the queued direction first; if it's passable we commit the turn
+  // immediately so controls feel responsive even at high speed.
   const [ndx, ndy] = pacman.nextDir;
   const nx = pacman.x + ndx * pacman.speed;
   const ny = pacman.y + ndy * pacman.speed;
   if(canMove(nx, ny)) {
-    pacman.dir = pacman.nextDir;
+    pacman.dir = pacman.nextDir;  // the turn is legal — commit it
   }
+
+  // ── Apply movement in committed direction ────────────────────
   const [dx, dy] = pacman.dir;
-  const mx = wrapX(pacman.x + dx * pacman.speed);
-  const my = pacman.y + dy * pacman.speed;
+  const mx = wrapX(pacman.x + dx * pacman.speed);  // apply tunnel wrap on X
+  const my = pacman.y  + dy * pacman.speed;
   if(canMove(mx, my)) {
     pacman.x = mx;
     pacman.y = my;
   }
+  // If canMove is false, Pac-Man is pressed against a wall and simply stops
 
-  // Eat dot
-  const col = Math.round(pacman.x), row = Math.round(pacman.y);
-  if(row>=0&&row<ROWS&&col>=0&&col<COLS) {
+  // ── Dot / pellet eating ──────────────────────────────────────
+  // Round to the nearest integer tile to find which cell Pac-Man is over
+  const col = Math.round(pacman.x);
+  const row = Math.round(pacman.y);
+  if(row >= 0 && row < ROWS && col >= 0 && col < COLS) {
     if(map[row][col] === 2) {
+      // Eat a regular dot: replace with empty floor, add points, decrement count
       map[row][col] = 4;
-      score += 10; dotCount--;
+      score += 10;
+      dotCount--;
       scoreEl.textContent = score;
     } else if(map[row][col] === 3) {
+      // Eat a power pellet: higher points, and trigger ghost frightened mode
       map[row][col] = 4;
-      score += 50; dotCount--;
+      score += 50;
+      dotCount--;
       scoreEl.textContent = score;
       frightenGhosts();
     }
   }
 
-  // Mouth animate
+  // ── Mouth animation ──────────────────────────────────────────
+  // mouthAngle oscillates between ~0.02 (almost closed) and 0.35 (wide open).
+  // mouthDir flips at each extreme, creating a smooth continuous chewing motion.
   pacman.mouthAngle += 0.07 * pacman.mouthDir;
-  if(pacman.mouthAngle > 0.35) pacman.mouthDir = -1;
-  if(pacman.mouthAngle < 0.02) pacman.mouthDir = 1;
+  if(pacman.mouthAngle > 0.35) pacman.mouthDir = -1;  // reached wide-open → start closing
+  if(pacman.mouthAngle < 0.02) pacman.mouthDir =  1;  // reached closed → start opening
 }
 
+/**
+ * frightenGhosts — activates frightened mode for every non-eaten ghost.
+ *
+ * frightTimer is set to 400 frames (~6.7 seconds at 60 fps).
+ * Each ghost's direction is reversed so they immediately start fleeing.
+ */
 function frightenGhosts() {
   frightTimer = 400;
   for(const g of ghosts) {
-    if(!g.eaten) { g.frightened = true; g.dir = [g.dir[0]*-1, g.dir[1]*-1]; }
+    if(!g.eaten) {
+      g.frightened = true;
+      // Reverse direction vector so ghosts flee from where they were heading
+      g.dir = [g.dir[0] * -1, g.dir[1] * -1];
+    }
   }
 }
 
-// ---- GHOST AI ----
+
+// ════════════════════════════════════════════════════════════════
+//  GHOST AI
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * ghostTarget(g) — returns the [col, row] tile the ghost is aiming for.
+ *
+ * In 'scatter' mode every ghost retreats to a fixed corner of the maze.
+ * In 'chase' mode each ghost uses a unique rule (faithful to the original arcade):
+ *
+ *   Blinky — directly targets Pac-Man's current tile
+ *   Pinky  — targets 4 tiles ahead of Pac-Man's current facing direction
+ *   Inky   — flanking: 2 tiles ahead of Pac-Man mirrored through Blinky's position
+ *   Clyde  — chases when far (>8 tiles away) but retreats to his corner when close
+ */
 function ghostTarget(g) {
   if(g.mode === 'scatter') {
-    const corners = { blinky:[26,1], pinky:[2,1], inky:[26,29], clyde:[2,29] };
-    return corners[g.name] || [13,15];
+    // Each ghost has its own corner target to prevent them all bunching together
+    const corners = {
+      blinky: [26,  1],  // top-right
+      pinky:  [ 2,  1],  // top-left
+      inky:   [26, 29],  // bottom-right
+      clyde:  [ 2, 29],  // bottom-left
+    };
+    return corners[g.name] || [13, 15];
   }
-  // Chase
-  switch(g.name) {
-    case 'blinky': return [Math.round(pacman.x), Math.round(pacman.y)];
-    case 'pinky': return [Math.round(pacman.x)+4*pacman.dir[0], Math.round(pacman.y)+4*pacman.dir[1]];
-    case 'inky': {
-      const blinky = ghosts[0];
-      const px = Math.round(pacman.x)+2*pacman.dir[0], py = Math.round(pacman.y)+2*pacman.dir[1];
-      return [2*px - Math.round(blinky.x), 2*py - Math.round(blinky.y)];
-    }
-    case 'clyde': {
-      const dx = g.x - pacman.x, dy = g.y - pacman.y;
-      return Math.sqrt(dx*dx+dy*dy) > 8 ? [Math.round(pacman.x), Math.round(pacman.y)] : [2, 29];
-    }
-  }
-  return [13,15];
-}
 
-function updateGhost(g) {
-  // House mode
-  if(g.mode === 'house') {
-    g.modeTimer--;
-    // Bounce inside house
-    const ny = g.y + (g.dir[1]||1) * 0.06;
-    if(ny > 15.5) g.dir = DIR.UP;
-    else if(ny < 14) g.dir = DIR.DOWN;
-    else g.dir = g.dir[1] !== 0 ? g.dir : DIR.UP;
-    g.y += g.dir[1] * 0.06;
+  // Chase mode — unique targeti;
     if(g.modeTimer <= 0) { g.mode = 'scatter'; g.x = 13.5; g.y = 11; }
     return;
   }
