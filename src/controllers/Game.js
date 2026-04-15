@@ -13,11 +13,11 @@
 import { Maze } from '../models/Maze.js';
 import { Pacman } from '../models/Pacman.js';
 import { Ghost } from '../models/Ghost.js';
-import { ghostTargets } from './ghostAI.js';
+import { ghostTargets } from '../const/ghostAI.js';
 import { ModeScheduler } from './ModeScheduler.js';
 import { CollisionSystem } from './CollisionSystem.js';
 import { StateMachine } from './StateMachine.js';
-import { LEVEL_1 } from './mazeTemplate.js';
+import { LEVEL_1 } from '../maze-templates/MazeTemplate.js';
 
 const STARTING_LIVES = 3;
 const DEATH_ANIMATION_MS = 1500;   // how long the death spiral plays before respawn or game-over
