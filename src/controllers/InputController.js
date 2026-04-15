@@ -10,7 +10,7 @@
 // events. This is what lets us swap input sources (add gamepad support,
 // disable keyboard for a demo mode) without touching model code.
 
-import { DIR } from './direction.js';
+import { DIR } from '../const/direction.js';
 
 // Keys that map to directions. Arrow keys and WASD both supported — WASD
 // because left-hand-only is comfortable for long sessions, arrows because
