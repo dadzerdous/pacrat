@@ -64,8 +64,8 @@ export class Maze {
       [x + COLLISION_MARGIN, y + COLLISION_MARGIN],
     ];
     for (const [cx, cy] of corners) {
-      const col = Math.floor(cx);
-      const row = Math.floor(cy);
+      const col = Math.round(cx);
+      const row = Math.round(cy);
       if (row < 0 || row >= this.rows || col < 0 || col >= this.cols) continue;
       if (this.#grid[row][col] === WALL) return false;
     }
@@ -75,8 +75,8 @@ export class Maze {
   /** Integer-tile wall test. Used by ghost AI for neighbor scoring —
    *  it asks "could I step into this specific tile" not "am I clipping." */
   isPassableTile(col, row) {
-    const c = Math.floor(col);
-    const r = Math.floor(row);
+    const c = Math.round(col);
+    const r = Math.round(row);
     if (r < 0 || r >= this.rows || c < 0 || c >= this.cols) return false;
     return this.#grid[r][c] !== WALL;
   }
