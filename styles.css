@@ -1,8 +1,6 @@
 /* styles.css
-   Layout: viewport-fit flex column. Canvas takes leftover vertical space
-   and scales proportionally; HUD/lives/message/D-pad are fixed-size and
-   always visible. Internal canvas resolution stays 560x620 for crisp
-   rendering — only display size is responsive. */
+   Layout: viewport-fit flex column. Fixed-size HUD/lives/message/D-pad
+   always visible; canvas takes leftover space and scales proportionally. */
 
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -22,11 +20,10 @@ body {
   align-items: center;
   justify-content: flex-start;
   padding: 8px 0;
-  gap: 8px;
+  gap: 6px;
   overflow: hidden;
 }
 
-/* Top HUD row — width matches canvas via max-width so they stay aligned. */
 #header {
   display: flex;
   justify-content: space-between;
@@ -46,8 +43,6 @@ body {
 
 #score-val, #high-val { color: #FFD700; }
 
-/* Canvas: takes all leftover vertical space, maintains 560:620 aspect ratio.
-   The internal pixel buffer stays 560x620 (set in HTML); CSS scales display. */
 #gameCanvas {
   display: block;
   border: 2px solid #1a1aff;
@@ -74,10 +69,10 @@ body {
 
 #message {
   color: #FFD700;
-  font-size: 14px;
+  font-size: 12px;
   text-align: center;
   letter-spacing: 2px;
-  min-height: 20px;
+  min-height: 18px;
   text-shadow: 0 0 10px #FFD700;
   animation: blink 1s step-start infinite;
   flex-shrink: 0;
@@ -88,25 +83,25 @@ body {
   50%      { opacity: 0; }
 }
 
-/* D-pad: hidden by default, shown on touch-capable devices. */
+/* D-pad: always visible on every platform. */
 #mobile-controls {
-  display: none;
+  display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-shrink: 0;
 }
 
-.ctrl-row { display: flex; gap: 6px; }
+.ctrl-row { display: flex; gap: 4px; }
 
 .ctrl-btn {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   background: #111;
   border: 2px solid #1a1aff;
   border-radius: 8px;
   color: #fff;
-  font-size: 20px;
+  font-size: 18px;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -118,9 +113,3 @@ body {
 }
 
 .ctrl-btn:active { background: #1a1aff44; }
-
-/* Show D-pad on touch devices (phones, tablets, touch laptops).
-   `hover: none` means no real hover — i.e. primarily a touch device. */
-@media (hover: none) and (pointer: coarse) {
-  #mobile-controls { display: flex; }
-}
