@@ -1,31 +1,40 @@
 /* styles.css
-   Baseline styling. The front-end person should feel free to tear this
-   apart — it's here to make the game playable, not to be pretty. */
+   Layout: viewport-fit flex column. Canvas takes leftover vertical space
+   and scales proportionally; HUD/lives/message/D-pad are fixed-size and
+   always visible. Internal canvas resolution stays 560x620 for crisp
+   rendering — only display size is responsive. */
 
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+html, body {
+  height: 100%;
+  width: 100%;
+}
+
 body {
   background: #000;
   color: #fff;
   font-family: 'Press Start 2P', monospace;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  padding: 8px 0;
+  gap: 8px;
   overflow: hidden;
 }
 
-/* Top HUD row — matches canvas width so score/best align with canvas edges. */
+/* Top HUD row — width matches canvas via max-width so they stay aligned. */
 #header {
   display: flex;
   justify-content: space-between;
-  width: 560px;
+  width: 100%;
+  max-width: 560px;
   font-size: 10px;
-  margin-bottom: 8px;
-  padding: 0 4px;
+  padding: 0 8px;
+  flex-shrink: 0;
 }
 
 #title {
@@ -37,17 +46,26 @@ body {
 
 #score-val, #high-val { color: #FFD700; }
 
+/* Canvas: takes all leftover vertical space, maintains 560:620 aspect ratio.
+   The internal pixel buffer stays 560x620 (set in HTML); CSS scales display. */
 #gameCanvas {
   display: block;
   border: 2px solid #1a1aff;
   box-shadow: 0 0 30px #1a1aff88, 0 0 60px #1a1aff44;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-width: 100%;
+  aspect-ratio: 560 / 620;
+  height: auto;
+  width: auto;
+  object-fit: contain;
 }
 
 #lives-row {
   display: flex;
   gap: 10px;
-  margin-top: 10px;
   align-items: center;
+  flex-shrink: 0;
 }
 
 #lives-label { font-size: 9px; margin-right: 4px; }
@@ -57,39 +75,38 @@ body {
 #message {
   color: #FFD700;
   font-size: 14px;
-  margin-top: 16px;
   text-align: center;
   letter-spacing: 2px;
-  min-height: 30px;
+  min-height: 20px;
   text-shadow: 0 0 10px #FFD700;
   animation: blink 1s step-start infinite;
+  flex-shrink: 0;
 }
 
-/* The blink animation stays on even when the message is blank — harmless
-   (nothing to blink), and it means the message reappears already blinking. */
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0; }
 }
 
+/* D-pad: hidden by default, shown on touch-capable devices. */
 #mobile-controls {
   display: none;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  margin-top: 14px;
+  flex-shrink: 0;
 }
 
 .ctrl-row { display: flex; gap: 6px; }
 
 .ctrl-btn {
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   background: #111;
   border: 2px solid #1a1aff;
   border-radius: 8px;
   color: #fff;
-  font-size: 22px;
+  font-size: 20px;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -102,9 +119,8 @@ body {
 
 .ctrl-btn:active { background: #1a1aff44; }
 
-/* Mobile: stretch canvas, reveal D-pad. */
-@media (max-width: 620px) {
-  #header { width: 100vw; padding: 0 8px; font-size: 8px; }
-  #gameCanvas { width: 100vw !important; height: auto !important; }
+/* Show D-pad on touch devices (phones, tablets, touch laptops).
+   `hover: none` means no real hover — i.e. primarily a touch device. */
+@media (hover: none) and (pointer: coarse) {
   #mobile-controls { display: flex; }
 }
