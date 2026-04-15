@@ -80,6 +80,7 @@ export class CollisionSystem {
       const dy = ghost.y - pacman.y;
       if (dx * dx + dy * dy >= COLLISION_RADIUS_SQ) continue;
 
+      console.log(`touch ${ghost.name} frightened=${ghost.frightened} lifeState=${ghost.lifeState}`);
       if (ghost.frightened) {
         // Pacman eats the ghost. Points scale with combo, capped at index 3.
         const pts = GHOST_EAT_POINTS[Math.min(this.#eatCombo, GHOST_EAT_POINTS.length - 1)];
