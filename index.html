@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pacrat</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- HUD: score on the left, title in the middle, high score on the right -->
+  <div id="header">
+    <div>SCORE<br><span id="score-val">0</span></div>
+    <div id="title">PACRAT</div>
+    <div>BEST<br><span id="high-val">0</span></div>
+  </div>
+
+  <!-- Main canvas. 28 cols × 20px = 560 wide, 31 rows × 20px = 620 tall. -->
+  <canvas id="gameCanvas" width="560" height="620"></canvas>
+
+  <!-- Life icons: one mini canvas per reserve life -->
+  <div id="lives-row">
+    <span id="lives-label">LIVES:</span>
+    <canvas class="life-icon" id="life1" width="18" height="18"></canvas>
+    <canvas class="life-icon" id="life2" width="18" height="18"></canvas>
+    <canvas class="life-icon" id="life3" width="18" height="18"></canvas>
+  </div>
+
+  <!-- Status message: "PRESS SPACE TO START", "GAME OVER", etc. -->
+  <div id="message">PRESS SPACE TO START</div>
+
+  <!-- Mobile D-pad. Hidden by default, shown via CSS on touch devices. -->
+  <div id="mobile-controls">
+    <div class="ctrl-row"><button class="ctrl-btn" id="btn-up">▲</button></div>
+    <div class="ctrl-row">
+      <button class="ctrl-btn" id="btn-left">◀</button>
+      <button class="ctrl-btn" id="btn-down">▼</button>
+      <button class="ctrl-btn" id="btn-right">▶</button>
+    </div>
+  </div>
+
+  <!-- type="module" is what lets our ES module imports work. -->
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
