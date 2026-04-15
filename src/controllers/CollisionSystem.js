@@ -69,6 +69,7 @@ export class CollisionSystem {
    *    2. Ghost is frightened and not yet eaten — Pacman eats it, score goes up
    *    3. Ghost is alive and not frightened — Pacman dies (once per frame max) */
   resolveGhosts(pacman, ghosts) {
+    console.log(`touch ${ghost.name} frightened=${ghost.frightened} lifeState=${ghost.lifeState}`);
     if (pacman.dead) return;
 
     for (const ghost of ghosts) {
@@ -80,7 +81,6 @@ export class CollisionSystem {
       const dy = ghost.y - pacman.y;
       if (dx * dx + dy * dy >= COLLISION_RADIUS_SQ) continue;
 
-      console.log(`touch ${ghost.name} frightened=${ghost.frightened} lifeState=${ghost.lifeState}`);
       if (ghost.frightened) {
         // Pacman eats the ghost. Points scale with combo, capped at index 3.
         const pts = GHOST_EAT_POINTS[Math.min(this.#eatCombo, GHOST_EAT_POINTS.length - 1)];
