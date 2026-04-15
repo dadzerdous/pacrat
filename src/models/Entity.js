@@ -3,7 +3,7 @@
 // Pacman and Ghost both extend this. Holds position, direction, speed,
 // and the shared corner-based collision check.
 
-import { DIR } from './direction.js';
+import { DIR } from '../const/direction.js';
 
 export class Entity {
   constructor({ x, y, speed, dir = DIR.LEFT }) {
