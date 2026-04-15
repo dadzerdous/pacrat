@@ -4,7 +4,7 @@
 // the renderer reads it but never writes to it.
 
 import { Entity } from './Entity.js';
-import { DIR } from './direction.js';
+import { DIR } from '../const/direction.js';
 
 export class Pacman extends Entity {
   constructor() {
