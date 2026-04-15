@@ -192,10 +192,11 @@ export class ModeScheduler {
       const dx = GHOST_SPAWN.x - g.x;
       const dy = GHOST_SPAWN.y - g.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-
       if (dist < ARRIVAL_DIST) {
         g.x = GHOST_SPAWN.x;
         g.y = GHOST_SPAWN.y;
+        g.dir = [-1, 0];          // LEFT — same convention as house-exit
+        g.lastDecisionTile = null; // Force AI to re-decide at the new tile
         g.revive();
       } else {
         g.x += (dx / dist) * EATEN_RETURN_SPEED;
