@@ -158,11 +158,17 @@ export class ModeScheduler {
       const t = this.#houseTimers[g.name];
       if (t === undefined || t <= 0) continue;
       this.#houseTimers[g.name]--;
-      // When the timer hits zero, we don't need to do anything special —
-      // the ghost is already at its house position and will start moving
-      // on the next tick. The timer gate simply prevented earlier movement
-      // via the `lifeState === 'alive'` check. (Future refinement: add a
-      // 'in-house' lifeState so Ghost.update() can itself gate on this.)
+
+      // When the timer just hit zero, teleport the ghost to the door
+      // corridor above the house and force its direction to LEFT so the
+      // AI takes over from a position where pathing-toward-Pacman naturally
+      // leads away from the house instead of back into it.
+      if (this.#houseTimers[g.name] === 0) {
+        g.x = GHOST_SPAWN.x;
+        g.y = GHOST_SPAWN.y;
+        g.dir = [-1, 0];          // LEFT — arbitrary but consistent and away from spawn column center
+        g.lastDecisionTile = null; // Force AI to re-decide at the new tile
+      }
     }
   }
 
