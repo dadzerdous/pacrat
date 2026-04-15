@@ -4,8 +4,8 @@
 // is shared across all ghosts and lives in chooseNextDirection().
 
 import { Entity } from './Entity.js';
-import { DIR } from './direction.js';
-import { chooseNextDirection } from './ghostAI.js';
+import { DIR } from '../const/direction.js';
+import { chooseNextDirection } from '../const/ghostAI.js';
 
 const FRIGHTENED_SPEED = 0.06;
 
