@@ -47,7 +47,7 @@ export class Ghost extends Entity {
       this.snapToTile();
       const target = this.frightened
         ? this.#randomTarget(maze)
-        : this.targetFn(pacman, blinky);
+        : this.targetFn(pacman, blinky, this);
       const next = chooseNextDirection(this, target, maze);
       if (next) this.dir = next;
     }
