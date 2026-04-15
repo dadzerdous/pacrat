@@ -25,10 +25,10 @@ const DEATH_ANIMATION_MS = 1500;   // how long the death spiral plays before res
 // Ghost spawn positions and AI bindings. Kept here (not inside Ghost) because
 // this is configuration — which brain goes in which body — not behavior.
 const GHOST_CONFIG = [
-  { name: 'blinky', color: '#FF0000', spawn: { x: 13.5, y: 11 }, targetFn: ghostTargets.blinky },
-  { name: 'pinky',  color: '#FFB8FF', spawn: { x: 13.5, y: 14 }, targetFn: ghostTargets.pinky  },
-  { name: 'inky',   color: '#00FFFF', spawn: { x: 11.5, y: 14 }, targetFn: ghostTargets.inky   },
-  { name: 'clyde',  color: '#FFB852', spawn: { x: 15.5, y: 14 }, targetFn: ghostTargets.clyde  },
+  { name: 'blinky', color: '#FF0000', spawn: { x: 13, y: 11 }, targetFn: ghostTargets.blinky },
+  { name: 'pinky',  color: '#FFB8FF', spawn: { x: 13, y: 14 }, targetFn: ghostTargets.pinky  },
+  { name: 'inky',   color: '#00FFFF', spawn: { x: 12, y: 14 }, targetFn: ghostTargets.inky   },
+  { name: 'clyde',  color: '#FFB852', spawn: { x: 14, y: 14 }, targetFn: ghostTargets.clyde  },
 ];
 
 export class Game {
