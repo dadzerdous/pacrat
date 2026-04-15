@@ -69,7 +69,6 @@ export class CollisionSystem {
    *    2. Ghost is frightened and not yet eaten — Pacman eats it, score goes up
    *    3. Ghost is alive and not frightened — Pacman dies (once per frame max) */
   resolveGhosts(pacman, ghosts) {
-    console.log('resolveGhosts:', ghosts.map(g => `${g.name}(${g.x.toFixed(1)},${g.y.toFixed(1)}) frightened=${g.frightened} life=${g.lifeState}`).join(' | '));
     if (pacman.dead) return;
 
     for (const ghost of ghosts) {
