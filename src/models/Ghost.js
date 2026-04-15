@@ -41,20 +41,19 @@ export class Ghost extends Entity {
     const speed = this.frightened ? FRIGHTENED_SPEED : this.baseSpeed;
     this.speed = speed;
 
-    // AI decisions only fire at tile centers. Between centers we slide along
-    // the committed direction. This is what gives ghosts their "locked-in"
-    // feel — they can't revise a bad turn until the next intersection.
-    if (this.atTileCenter()) {
+    // Use integer tile coordinates as the decision key, not float position.
+    // Float position changes every frame (movement), so keying on it would
+    // make the gate fire continuously. Integer tile only changes when the
+    // ghost actually crosses into a new tile.
+    const tileKey = `${Math.round(this.x)},${Math.round(this.y)}`;
+    if (this.atTileCenter() && tileKey !== this.lastDecisionTile) {
+      this.lastDecisionTile = tileKey;
       this.snapToTile();
-      const currentTile = `${this.x},${this.y}`;
-      if (currentTile !== this.lastDecisionTile) {
-        this.lastDecisionTile = currentTile;
-        const target = this.frightened
-          ? this.#randomTarget(maze)
-          : this.targetFn(pacman, blinky, this);
-        const next = chooseNextDirection(this, target, maze);
-        if (next) this.dir = next;
-      }
+      const target = this.frightened
+        ? this.#randomTarget(maze)
+        : this.targetFn(pacman, blinky, this);
+      const next = chooseNextDirection(this, target, maze);
+      if (next) this.dir = next;
     }
 
     this.tryMove(this.dir, maze);
