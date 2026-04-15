@@ -6,10 +6,10 @@
 // (alongside InputController, which owns keyboard/touch event binding).
 // Everything else receives its DOM collaborators through constructor args.
 
-import { Game } from './controllers/Game.js';
-import { Renderer } from './views/Renderer.js';
-import { HUD } from './views/HUD.js';
-import { InputController } from './controllers/InputController.js';
+import { Game } from './src/controllers/Game.js';
+import { Renderer } from './src/views/Renderer.js';
+import { HUD } from './src/views/HUD.js';
+import { InputController } from './src/controllers/InputController.js';
 
 // --- DOM lookups -------------------------------------------------------
 // Done once at startup. If any of these are missing we throw early with
