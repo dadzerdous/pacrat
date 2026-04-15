@@ -10,9 +10,9 @@
 // it receives its collaborators through constructor args or callbacks — no
 // globals, no ambient references, no "reach up" to Game.
 
-import { Maze } from './Maze.js';
-import { Pacman } from './Pacman.js';
-import { Ghost } from './Ghost.js';
+import { Maze } from '../models/Maze.js';
+import { Pacman } from '../models/Pacman.js';
+import { Ghost } from '../models/Ghost.js';
 import { ghostTargets } from './ghostAI.js';
 import { ModeScheduler } from './ModeScheduler.js';
 import { CollisionSystem } from './CollisionSystem.js';
