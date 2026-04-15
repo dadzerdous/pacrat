@@ -39,7 +39,7 @@ const HOUSE_EXIT_FRAMES = {
 const EATEN_RETURN_SPEED = 0.25;
 
 // Where eaten ghosts respawn. Matches the ghost house center.
-const GHOST_SPAWN = { x: 13.5, y: 11 };
+const GHOST_SPAWN = { x: 13, y: 11 };
 
 // Arrival tolerance — when the eyes get this close to spawn, we revive.
 const ARRIVAL_DIST = 0.2;
