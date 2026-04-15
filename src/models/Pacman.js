@@ -31,13 +31,21 @@ export class Pacman extends Entity {
       return;
     }
 
-    // Try the buffered direction first. If it's legal, commit — this gives
-    // responsive controls even mid-corridor. If blocked, we keep going
-    // straight until the player reaches a tile where the turn opens up.
-    const nx = this.x + this.nextDir[0] * this.speed;
-    const ny = this.y + this.nextDir[1] * this.speed;
-    if (maze.canMove(nx, ny)) {
+    // Try the buffered direction. We can only legally turn into a new lane
+    // if the tile one step away in that direction is passable AND we're
+    // close enough to the perpendicular axis to snap into the new lane.
+    // Float canMove with corner checks fails perpendicular turns mid-corridor
+    // because the trailing corner straddles two columns/rows.
+    const cx = Math.round(this.x);
+    const cy = Math.round(this.y);
+    const targetCol = cx + this.nextDir[0];
+    const targetRow = cy + this.nextDir[1];
+    if (maze.isPassableTile(targetCol, targetRow)) {
       this.dir = this.nextDir;
+      // Snap the perpendicular axis so we're aligned with the new lane.
+      // Turning vertically? Snap x. Turning horizontally? Snap y.
+      if (this.nextDir[1] !== 0) this.x = cx;
+      if (this.nextDir[0] !== 0) this.y = cy;
     }
 
     this.tryMove(this.dir, maze);  // silently no-ops if pressed against a wall
