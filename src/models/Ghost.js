@@ -30,6 +30,7 @@ export class Ghost extends Entity {
     // Keeping them separate avoids the tangled single-enum the original had.
     this.lifeState = 'alive';     // 'alive' | 'eaten'
     this.frightened = false;
+    this.lastDecisionTile = null;  // [col, row] of the tile we last picked a direction at
   }
 
   update(maze, pacman, blinky) {
@@ -45,11 +46,15 @@ export class Ghost extends Entity {
     // feel — they can't revise a bad turn until the next intersection.
     if (this.atTileCenter()) {
       this.snapToTile();
-      const target = this.frightened
-        ? this.#randomTarget(maze)
-        : this.targetFn(pacman, blinky, this);
-      const next = chooseNextDirection(this, target, maze);
-      if (next) this.dir = next;
+      const currentTile = `${this.x},${this.y}`;
+      if (currentTile !== this.lastDecisionTile) {
+        this.lastDecisionTile = currentTile;
+        const target = this.frightened
+          ? this.#randomTarget(maze)
+          : this.targetFn(pacman, blinky, this);
+        const next = chooseNextDirection(this, target, maze);
+        if (next) this.dir = next;
+      }
     }
 
     this.tryMove(this.dir, maze);
