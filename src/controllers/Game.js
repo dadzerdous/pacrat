@@ -17,7 +17,7 @@ import { ghostTargets } from '../const/ghostAI.js';
 import { ModeScheduler } from './ModeScheduler.js';
 import { CollisionSystem } from './CollisionSystem.js';
 import { StateMachine } from './StateMachine.js';
-import { LEVEL_1 } from '../maze-templates/MazeTemplate.js';
+import { LEVELS } from '../maze-templates/MazeTemplate.js';
 
 const STARTING_LIVES = 3;
 const DEATH_ANIMATION_MS = 1500;   // how long the death spiral plays before respawn or game-over
@@ -42,7 +42,8 @@ export class Game {
 
     // Model construction. Order matters: CollisionSystem needs callbacks
     // that reference ModeScheduler and StateMachine, so those come first.
-    this.#maze = new Maze(LEVEL_1);
+    this.#levelIndex = 0;
+    this.#maze = new Maze(LEVELS[0]);
     this.#pacman = new Pacman();
     this.#ghosts = GHOST_CONFIG.map(cfg => new Ghost(cfg));
     this.#blinky = this.#ghosts.find(g => g.name === 'blinky');
@@ -83,6 +84,7 @@ export class Game {
   #maze; #pacman; #ghosts; #blinky;
   #modeScheduler; #collisions; #stateMachine;
   #score; #highScore; #lives;
+  #levelIndex;
   #rafHandle;
 
   // ================================================================
@@ -177,9 +179,22 @@ export class Game {
   }
 
   #enterWin() {
-    this.#updateHighScore();
-    this.#hud.setMessage('YOU WIN! SPACE');
-  }
+      if (this.#levelIndex < LEVELS.length - 1) {
+        // More levels to go — advance after a brief pause so the player
+        // sees the cleared maze before it switches.
+        this.#hud.setMessage('LEVEL CLEAR!');
+        this.#stateMachine.setTimer(() => {
+          this.#levelIndex++;
+          this.#maze.loadTemplate(LEVELS[this.#levelIndex]);
+          this.#respawnRound();
+          this.#stateMachine.transition('playing');
+        }, 2000);
+      } else {
+        // All levels beaten — real win.
+        this.#updateHighScore();
+        this.#hud.setMessage('YOU WIN! SPACE');
+      }
+    }
 
   // ================================================================
   //  ROUND & GAME LIFECYCLE
@@ -207,7 +222,7 @@ export class Game {
     this.#hud.setScore(this.#score);
     this.#hud.setLives(this.#lives);
 
-    this.#maze.reset();
+    this.#maze.loadTemplate(LEVELS[0]);
     this.#respawnRound();
   }
 
