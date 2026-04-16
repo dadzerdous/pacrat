@@ -50,6 +50,15 @@ export class Maze {
     }
   }
 
+  /** Load a new level template and reset the grid to it.
+   *  Called by Game when advancing to the next level. */
+  loadTemplate(template) {
+    this.#template = template;
+    this.rows = template.length;
+    this.cols = template[0].length;
+    this.reset();
+  }
+
   /**
    * Float-space collision test. Used by Entity.tryMove().
    * Tests all four corners of a COLLISION_MARGIN-sized box around (x, y).
