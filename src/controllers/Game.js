@@ -137,6 +137,8 @@ export class Game {
       this.#hud.setLives(this.#lives);
     }
 
+    console.log("Game.enterDying() -> godMode = " + this.#godMode);
+    
     this.#stateMachine.setTimer(() => {
       if (this.#lives < 0 && !this.#godMode) {
         this.#stateMachine.transition('over');
