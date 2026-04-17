@@ -38,6 +38,7 @@ export class InputController {
     this.onDirection = () => {};
     this.onStart = () => {};
     this.onGodMode = () => {};
+    this.onPause = () => {};
     this.#bindKeyboard();
     if (buttons) this.#bindButtons(buttons);
   }
@@ -54,6 +55,12 @@ export class InputController {
 
       if (e.key === 'g' || e.key === 'G') {
         this.onGodMode();
+        return;
+      }
+
+      if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
+        e.preventDefault();
+        this.onPause();
         return;
       }
 
