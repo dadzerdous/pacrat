@@ -45,6 +45,7 @@ export class Game {
     this.#stateMachine = new StateMachine({
       ready:   { onEnter: () => this.#hud.setMessage('PRESS SPACE TO START') },
       playing: { onEnter: () => this.#hud.setMessage('') },
+      paused:  { onEnter: () => this.#hud.setMessage('PAUSED') },
       dying:   { onEnter: () => this.#enterDying() },
       over:    { onEnter: () => this.#enterOver() },
       win:     { onEnter: () => this.#enterWin() },
@@ -53,6 +54,7 @@ export class Game {
     this.#input.onDirection = (dir) => this.#pacman.queueDirection(dir);
     this.#input.onStart = () => this.#handleStartPress();
     this.#input.onGodMode = () => this.#toggleGodMode();
+    this.#input.onPause = () => this.#handlePause();
 
     this.#score = 0;
     this.#highScore = 0;
@@ -215,6 +217,18 @@ export class Game {
           this.#hud.setMessage('');
         }
       }, 1000);
+    }
+  }
+
+  // ================================================================
+  //  GOD MODE
+  // ================================================================
+  #handlePause() {
+    const s = this.#stateMachine.current;
+    if (s === 'playing') {
+      this.#stateMachine.transition('paused');
+    } else if (s === 'paused') {
+      this.#stateMachine.transition('playing');
     }
   }
 
