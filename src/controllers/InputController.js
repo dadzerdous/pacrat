@@ -37,7 +37,7 @@ export class InputController {
     // Default to no-ops so InputController is safe to use before wiring.
     this.onDirection = () => {};
     this.onStart = () => {};
-
+    this.onGodMode = () => {};
     this.#bindKeyboard();
     if (buttons) this.#bindButtons(buttons);
   }
@@ -49,6 +49,11 @@ export class InputController {
       if (e.code === 'Space' || e.key === ' ') {
         e.preventDefault();   // stop the page from scrolling on space
         this.onStart();
+        return;
+      }
+
+      if (e.key === 'g' || e.key === 'G') {
+        this.onGodMode();
         return;
       }
 
