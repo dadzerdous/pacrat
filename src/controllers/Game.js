@@ -70,6 +70,7 @@ export class Game {
     // keyboard/touch mapping is its problem, not ours.
     this.#input.onDirection = (dir) => this.#pacman.queueDirection(dir);
     this.#input.onStart = () => this.#handleStartPress();
+    this.#input.onGodMode = () => this.#toggleGodMode();
 
     // Round-level state (not per-level — survives across deaths).
     this.#score = 0;
@@ -85,6 +86,7 @@ export class Game {
   #modeScheduler; #collisions; #stateMachine;
   #score; #highScore; #lives;
   #levelIndex;
+  #godMode = false;
   #rafHandle;
 
   // ================================================================
@@ -160,11 +162,13 @@ export class Game {
    *  is registered through StateMachine so a later transition cancels it. */
   #enterDying() {
     this.#pacman.kill();
-    this.#lives--;
-    this.#hud.setLives(this.#lives);
+    if (!this.#godMode) {
+      this.#lives--;
+      this.#hud.setLives(this.#lives);
+    }
 
     this.#stateMachine.setTimer(() => {
-      if (this.#lives < 0) {
+      if (this.#lives < 0 && !this.#godMode) {
         this.#stateMachine.transition('over');
       } else {
         this.#respawnRound();
@@ -253,4 +257,18 @@ export class Game {
       this.#hud.setHighScore(this.#highScore);
     }
   }
+
+  #toggleGodMode() {
+    this.#godMode = !this.#godMode;
+    this.#hud.setMessage(this.#godMode ? 'GOD MODE ON' : 'GOD MODE OFF');
+    // Clear the message after 1 second if we're playing
+    if (this.#stateMachine.current === 'playing') {
+      setTimeout(() => {
+        if (this.#stateMachine.current === 'playing') {
+          this.#hud.setMessage('');
+        }
+      }, 1000);
+    }
+  }
+  
 }
