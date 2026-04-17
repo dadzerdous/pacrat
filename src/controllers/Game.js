@@ -179,22 +179,13 @@ export class Game {
   }
 
   #enterWin() {
-      if (this.#levelIndex < LEVELS.length - 1) {
-        // More levels to go — advance after a brief pause so the player
-        // sees the cleared maze before it switches.
-        this.#hud.setMessage('LEVEL CLEAR!');
-        this.#stateMachine.setTimer(() => {
-          this.#levelIndex++;
-          this.#maze.loadTemplate(LEVELS[this.#levelIndex]);
-          this.#respawnRound();
-          this.#stateMachine.transition('playing');
-        }, 2000);
-      } else {
-        // All levels beaten — real win.
-        this.#updateHighScore();
-        this.#hud.setMessage('YOU WIN! SPACE');
-      }
+    this.#updateHighScore();
+    if (this.#levelIndex < LEVELS.length - 1) {
+      this.#hud.setMessage('LEVEL CLEAR! SPACE');
+    } else {
+      this.#hud.setMessage('YOU WIN! SPACE');
     }
+  }
 
   // ================================================================
   //  ROUND & GAME LIFECYCLE
@@ -230,12 +221,22 @@ export class Game {
    *  ignored during 'playing' and 'dying' so mid-game spaces don't
    *  accidentally restart. */
   #handleStartPress() {
-    const s = this.#stateMachine.current;
-    if (s === 'ready' || s === 'over' || s === 'win') {
-      this.#resetGame();
-      this.#stateMachine.transition('playing');
+      const s = this.#stateMachine.current;
+      if (s === 'ready' || s === 'over') {
+        this.#resetGame();
+        this.#stateMachine.transition('playing');
+      } else if (s === 'win') {
+        if (this.#levelIndex < LEVELS.length - 1) {
+          this.#levelIndex++;
+          this.#maze.loadTemplate(LEVELS[this.#levelIndex]);
+          this.#respawnRound();
+          this.#stateMachine.transition('playing');
+        } else {
+          this.#resetGame();
+          this.#stateMachine.transition('playing');
+        }
+      }
     }
-  }
 
   // ================================================================
   //  SCORE
