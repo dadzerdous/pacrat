@@ -1,4 +1,11 @@
 splash page
+
+optimize for mobile
+-god mode
+-pause
+-start
+
+
 reason for pellets
 power ups
 -gun
