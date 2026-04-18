@@ -185,6 +185,9 @@ export class ModeScheduler {
         g.y = GHOST_SPAWN.y;
         g.lastDecisionTile = null;
         g.revive();
+      } else {
+        g.x += (dx / dist) * EATEN_RETURN_SPEED;
+        g.y += (dy / dist) * EATEN_RETURN_SPEED;
       }
     }
   }
