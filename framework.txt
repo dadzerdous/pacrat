@@ -1,0 +1,12 @@
+detect profile
+-create profile
+-login
+
+hub screen / state
+---options
+
+-shop
+
+-feed
+
+-plauy
