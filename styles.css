@@ -86,33 +86,75 @@ body {
   50%      { opacity: 0; }
 }
 
-/* D-pad: always visible. */
+/* D-pad + side buttons: 3-column layout, capped to canvas width */
 #mobile-controls {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 4px;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 560px;
+  padding: 0 8px;
+  gap: 0;
   flex-shrink: 0;
 }
 
-.ctrl-row { display: flex; gap: 4px; }
+/* Side columns: special button + tiny label stacked */
+.ctrl-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex: 0 0 auto;
+}
 
+.ctrl-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 5px;
+  color: #555;
+  letter-spacing: 1px;
+}
+
+/* D-pad: centred, takes remaining space */
+.ctrl-dpad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex: 1 1 auto;
+}
+
+.ctrl-row { display: flex; gap: 3px; justify-content: center; }
+
+/* Base button — direction arrows */
 .ctrl-btn {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   background: #111;
   border: 2px solid #1a1aff;
-  border-radius: 8px;
+  border-radius: 6px;
   color: #fff;
-  font-size: 18px;
+  font-size: 15px;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 10px #1a1aff55;
+  box-shadow: 0 0 8px #1a1aff55;
   transition: background 0.1s;
 }
 
 .ctrl-btn:active { background: #1a1aff44; }
+
+/* Special buttons (G / P) */
+.ctrl-btn-special {
+  width: 36px;
+  height: 36px;
+  border-color: #FFD700;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+}
+
+.ctrl-btn-special:active { background: rgba(255, 215, 0, 0.15); }
