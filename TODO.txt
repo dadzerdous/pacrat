@@ -3,6 +3,9 @@ optimize for mobile
 -pause
 -start
 
+pause after death tipp move
+
+ghost gets stuck in corner
 
 reason for pellets
 power ups
@@ -10,7 +13,9 @@ power ups
 -dive
 
 better control scheme (phone tilt?)
-create new emojis
+create new emojis 
+charecter select
+new enemy types 
 
 GROWING 
 
