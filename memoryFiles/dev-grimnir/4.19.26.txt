@@ -40,6 +40,9 @@ These URLs are confirmed fetchable when pasted by the user:
 index.html
 styles.css
 main.js
+memoryFiles/
+├── dev-grimnir/
+|   ├── 4.19.26.txt
 src/
 ├── const/
 │   ├── direction.js
