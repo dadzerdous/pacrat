@@ -43,7 +43,7 @@ export class Game {
     });
 
     this.#stateMachine = new StateMachine({
-      ready:   { onEnter: () => this.#hud.setMessage('MOVE OR CLICK TO START') },
+      ready:   { onEnter: () => this.#hud.setMessage('MOVE TO START') },
       playing: { onEnter: () => this.#hud.setMessage('') },
       paused:  { onEnter: () => this.#hud.setMessage('PAUSED') },
       dying:   { onEnter: () => this.#enterDying() },
@@ -51,7 +51,12 @@ export class Game {
       win:     { onEnter: () => this.#enterWin() },
     }, 'ready');
 
-    this.#input.onDirection = (dir) => this.#pacman.queueDirection(dir);
+    this.#input.onDirection = (dir) => {
+      // If the game is waiting to start, a direction press starts it too.
+      const s = this.#stateMachine.current;
+      if (s === 'ready' || s === 'over' || s === 'win') this.#handleStartPress();
+      this.#pacman.queueDirection(dir);
+    };
     this.#input.onStart = () => this.#handleStartPress();
     this.#input.onGodMode = () => this.#toggleGodMode();
     this.#input.onPause = () => this.#handlePause();
@@ -149,15 +154,15 @@ export class Game {
 
   #enterOver() {
     this.#updateHighScore();
-    this.#hud.setMessage('GAME OVER - MOVE OR CLICK');
+    this.#hud.setMessage('GAME OVER - MOVE TO RESTART');
   }
 
   #enterWin() {
     this.#updateHighScore();
     if (this.#levelIndex < LEVELS.length - 1) {
-      this.#hud.setMessage('LEVEL CLEAR! MOVE OR CLICK');
+      this.#hud.setMessage('LEVEL CLEAR! MOVE TO CONTINUE');
     } else {
-      this.#hud.setMessage('YOU WIN! MOVE OR CLICK');
+      this.#hud.setMessage('YOU WIN! MOVE TO RESTART');
     }
   }
 
