@@ -4,15 +4,21 @@ optimize for mobile
 -god mode
 -pause
 -start
-
+-Update WASD buttons.  Greater spacing would allow for better control and optimize screen usage. Instead of WASD stacked, layout could be horizontal and buttons could be larger.
+-Capture swype events to move pacrat.
 
 reason for pellets
 power ups
 -gun
 -dive
+-Mines
 
 better control scheme (phone tilt?)
 create new emojis
 
 GROWING ROOMS
 
+In general
+-Update pacrat death animation to reflect original pacman.  Pacrat folds to zero.
+-Introduce sounds
+-Add profile option
