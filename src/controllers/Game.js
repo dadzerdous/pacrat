@@ -147,7 +147,7 @@ export class Game {
         this.#stateMachine.transition('over');
       } else {
         this.#respawnRound();
-        this.#stateMachine.transition('playing');
+        this.#stateMachine.transition('ready');
       }
     }, DEATH_ANIMATION_MS);
   }
