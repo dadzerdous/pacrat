@@ -39,6 +39,8 @@ const input = new InputController({
     down:  document.getElementById('btn-down'),
     left:  document.getElementById('btn-left'),
     right: document.getElementById('btn-right'),
+    god:   document.getElementById('btn-god'),
+    pause: document.getElementById('btn-pause'),
   },
   canvas,   // enables click-to-start and touch swipe
 });
