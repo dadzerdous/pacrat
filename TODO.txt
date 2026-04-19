@@ -1,5 +1,3 @@
-splash page
-
 optimize for mobile
 -god mode
 -pause
@@ -14,5 +12,7 @@ power ups
 better control scheme (phone tilt?)
 create new emojis
 
-GROWING ROOMS
+GROWING 
+
+ENEMY TYPES
 
