@@ -19,7 +19,7 @@ const canvas = requireEl('gameCanvas');
 
 const hud = new HUD({
   scoreEl:      requireEl('score-val'),
-  highEl:       requireEl('high-val'),
+  highEl:       requireEl('high-val'), 
   messageEl:    requireEl('message'),
   lifeCanvases: [requireEl('life1'), requireEl('life2'), requireEl('life3')],
 });
