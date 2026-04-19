@@ -4,42 +4,673 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pacrat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+
+  <style>
+    /* =============================================
+       SPLASH STYLES
+       ============================================= */
+
+    :root {
+      --bg:        #000;
+      --primary:   #FFD700;
+      --secondary: #1a1aff;
+      --accent:    #ff4fd8;
+      --text:      #fff;
+      --dim:       #888;
+      --glow-a:    rgba(255,215,0,0.18);
+      --glow-b:    rgba(26,26,255,0.18);
+    }
+
+    /* Scanline overlay — sits over everything */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.18) 2px,
+        rgba(0,0,0,0.18) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ---- Splash wrapper — covers the whole screen ---- */
+    #splash-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      transition: opacity 0.5s ease;
+    }
+
+    #splash-screen.hiding {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ---- Radial ambient glow ---- */
+    .bg-glow {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 50% 40%, var(--glow-a), transparent 70%),
+        radial-gradient(ellipse 40% 60% at 20% 80%, var(--glow-b), transparent 60%),
+        radial-gradient(ellipse 40% 60% at 80% 20%, var(--glow-b), transparent 60%);
+      pointer-events: none;
+    }
+
+    /* ---- Corner decorations ---- */
+    .corner {
+      position: absolute;
+      width: 48px; height: 48px;
+      border-color: var(--secondary);
+      border-style: solid;
+      opacity: 0.5;
+    }
+    .corner.tl { top:16px; left:16px; border-width: 3px 0 0 3px; }
+    .corner.tr { top:16px; right:16px; border-width: 3px 3px 0 0; }
+    .corner.bl { bottom:16px; left:16px; border-width: 0 0 3px 3px; }
+    .corner.br { bottom:16px; right:16px; border-width: 0 3px 3px 0; }
+
+    /* ---- Pixel dots row ---- */
+    .pixel-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .pixel-row span {
+      width: 6px; height: 6px;
+      background: var(--secondary);
+      display: inline-block;
+      animation: pixblink 1.4s step-start infinite;
+    }
+    .pixel-row span:nth-child(2) { animation-delay: 0.2s; }
+    .pixel-row span:nth-child(3) { animation-delay: 0.4s; }
+    .pixel-row span:nth-child(4) { animation-delay: 0.6s; }
+    .pixel-row span:nth-child(5) { animation-delay: 0.8s; }
+
+    @keyframes pixblink {
+      0%,100% { opacity:1; }
+      50% { opacity:0.2; }
+    }
+
+    /* ---- Subtitle ---- */
+    #splash-subtitle {
+      position: relative; z-index: 1;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      color: var(--accent);
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.2s forwards;
+      text-shadow: 0 0 12px var(--accent);
+    }
+
+    /* ---- Title ---- */
+    #splash-title {
+      position: relative; z-index: 1;
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(28px, 7vw, 56px);
+      color: var(--primary);
+      letter-spacing: 6px;
+      text-align: center;
+      text-shadow:
+        0 0 20px var(--primary),
+        0 0 50px rgba(255,215,0,0.4),
+        0 0 100px rgba(255,215,0,0.15);
+      margin-bottom: 6px;
+      opacity: 0;
+      animation: fadeDown 0.7s 0.1s forwards, titleFlicker 8s 2s infinite;
+      line-height: 1.3;
+    }
+
+    @keyframes titleFlicker {
+      0%,96%,100% { opacity:1; }
+      97% { opacity:0.7; }
+      98% { opacity:1; }
+      99% { opacity:0.5; }
+    }
+
+    /* ---- Divider ---- */
+    .splash-divider {
+      position: relative; z-index: 1;
+      width: 220px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--secondary), var(--primary), var(--secondary), transparent);
+      margin: 22px 0 28px;
+      opacity: 0;
+      animation: fadeIn 0.5s 0.6s forwards;
+      flex-shrink: 0;
+    }
+
+    /* ---- Menu ---- */
+    #splash-menu {
+      position: relative; z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      max-width: 340px;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.8s forwards;
+    }
+
+    .menu-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 14px;
+      padding: 13px 20px;
+      border: 2px solid transparent;
+      border-radius: 2px;
+      cursor: pointer;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      color: var(--text);
+      background: transparent;
+      letter-spacing: 1px;
+      transition: border-color 0.1s, background 0.1s, color 0.1s;
+      position: relative;
+      text-align: left;
+    }
+
+    .menu-item .menu-icon {
+      font-size: 14px;
+      min-width: 20px;
+      text-align: center;
+      filter: grayscale(1) brightness(0.6);
+      transition: filter 0.15s;
+    }
+
+    .menu-item .menu-arrow {
+      margin-left: auto;
+      color: var(--primary);
+      opacity: 0;
+      transform: translateX(-6px);
+      transition: opacity 0.15s, transform 0.15s;
+      font-size: 10px;
+    }
+
+    .menu-item:hover, .menu-item.selected {
+      border-color: var(--primary);
+      background: rgba(255,215,0,0.06);
+      color: var(--primary);
+      text-shadow: 0 0 10px rgba(255,215,0,0.5);
+    }
+
+    .menu-item:hover .menu-icon,
+    .menu-item.selected .menu-icon { filter: none; }
+
+    .menu-item:hover .menu-arrow,
+    .menu-item.selected .menu-arrow { opacity: 1; transform: translateX(0); }
+
+    .menu-item.selected::before {
+      content: '▶';
+      position: absolute;
+      left: -18px;
+      color: var(--primary);
+      font-size: 8px;
+      text-shadow: 0 0 8px var(--primary);
+      animation: cursorBlink 0.8s step-start infinite;
+    }
+
+    @keyframes cursorBlink {
+      0%,100% { opacity:1; }
+      50% { opacity:0; }
+    }
+
+    /* ---- Prompt ---- */
+    #splash-prompt {
+      position: relative; z-index: 1;
+      margin-top: 32px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      color: var(--dim);
+      letter-spacing: 2px;
+      text-align: center;
+      animation: promptBlink 1.1s 1.4s step-start infinite;
+      opacity: 0;
+      animation-fill-mode: forwards;
+    }
+
+    @keyframes promptBlink {
+      0% { opacity:0; }
+      1%,50% { opacity:1; }
+      51%,100% { opacity:0; }
+    }
+
+    /* ---- Copyright ---- */
+    #splash-copy {
+      position: absolute;
+      bottom: 20px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 7px;
+      color: rgba(255,255,255,0.18);
+      letter-spacing: 2px;
+      z-index: 1;
+    }
+
+    /* ---- Overlay panels ---- */
+    .panel-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .panel-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .panel {
+      border: 2px solid var(--secondary);
+      box-shadow: 0 0 40px rgba(26,26,255,0.4), 0 0 80px rgba(26,26,255,0.1);
+      background: #000;
+      padding: 36px 40px 32px;
+      max-width: 520px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .panel-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 13px;
+      color: var(--primary);
+      letter-spacing: 4px;
+      margin-bottom: 28px;
+      text-shadow: 0 0 12px var(--primary);
+    }
+
+    .panel-close {
+      position: absolute;
+      top: 16px; right: 20px;
+      font-size: 9px;
+      color: var(--dim);
+      cursor: pointer;
+      letter-spacing: 1px;
+      background: none;
+      border: none;
+      font-family: 'Press Start 2P', monospace;
+    }
+    .panel-close:hover { color: var(--primary); }
+
+    .how-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .how-key {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      color: var(--secondary);
+      border: 1px solid var(--secondary);
+      padding: 4px 8px;
+      min-width: 72px;
+      text-align: center;
+      flex-shrink: 0;
+      text-shadow: 0 0 8px var(--secondary);
+    }
+
+    .how-desc {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      color: #ccc;
+      line-height: 1.9;
+      letter-spacing: 0.5px;
+    }
+
+    .opt-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      padding: 14px 0;
+      gap: 16px;
+    }
+
+    .opt-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      color: #ccc;
+      letter-spacing: 1px;
+    }
+
+    .opt-toggle { display: flex; gap: 8px; }
+
+    .opt-btn {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 7px;
+      padding: 5px 10px;
+      border: 1px solid var(--dim);
+      background: transparent;
+      color: var(--dim);
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+
+    .opt-btn.active {
+      border-color: var(--primary);
+      color: var(--primary);
+      text-shadow: 0 0 8px var(--primary);
+    }
+
+    /* ---- Shared animations ---- */
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(12px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    @keyframes fadeDown {
+      from { opacity:0; transform: translateY(-10px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity:0; }
+      to   { opacity:1; }
+    }
+
+    /* ---- Game wrapper: hidden until splash dismissed ---- */
+    #game-wrapper {
+      display: none;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* display:contents lets the game's children participate in body's
+       flex layout exactly as if game-wrapper weren't there */
+    #game-wrapper.visible {
+      display: contents;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- HUD: score on the left, title in the middle, high score on the right -->
-  <div id="header">
-    <div>SCORE<br><span id="score-val">0</span></div>
-    <div id="title">PACRAT</div>
-    <div>BEST<br><span id="high-val">0</span></div>
+  <!-- ===================== SPLASH SCREEN ===================== -->
+  <div id="splash-screen">
+    <div class="bg-glow"></div>
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+
+    <div id="splash-subtitle"></div>
+    <div id="splash-title"></div>
+
+    <div class="pixel-row">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <div class="splash-divider"></div>
+
+    <nav id="splash-menu" role="navigation" aria-label="Main menu"></nav>
+
+    <div id="splash-prompt">PRESS ENTER OR CLICK TO SELECT</div>
+    <div id="splash-copy"></div>
   </div>
 
-  <!-- Main canvas. 28 cols × 20px = 560 wide, 31 rows × 20px = 620 tall. -->
-  <canvas id="gameCanvas" width="560" height="620"></canvas>
-
-  <!-- Life icons: one mini canvas per reserve life -->
-  <div id="lives-row">
-    <span id="lives-label">LIVES:</span>
-    <canvas class="life-icon" id="life1" width="18" height="18"></canvas>
-    <canvas class="life-icon" id="life2" width="18" height="18"></canvas>
-    <canvas class="life-icon" id="life3" width="18" height="18"></canvas>
-  </div>
-
-  <!-- Status message: "PRESS SPACE TO START", "GAME OVER", etc. -->
-  <div id="message">PRESS SPACE TO START</div>
-
-  <!-- Mobile D-pad. Hidden by default, shown via CSS on touch devices. -->
-  <div id="mobile-controls">
-    <div class="ctrl-row"><button class="ctrl-btn" id="btn-up">▲</button></div>
-    <div class="ctrl-row">
-      <button class="ctrl-btn" id="btn-left">◀</button>
-      <button class="ctrl-btn" id="btn-down">▼</button>
-      <button class="ctrl-btn" id="btn-right">▶</button>
+  <!-- HOW TO PLAY panel -->
+  <div class="panel-overlay" id="panel-how">
+    <div class="panel" role="dialog" aria-modal="true" aria-label="How to Play">
+      <div class="panel-title">HOW TO PLAY</div>
+      <button class="panel-close" id="close-how" aria-label="Close">✕ CLOSE</button>
+      <div id="panel-how-content"></div>
     </div>
   </div>
 
-  <!-- type="module" is what lets our ES module imports work. -->
-  <script type="module" src="main.js"></script>
+  <!-- OPTIONS panel -->
+  <div class="panel-overlay" id="panel-opts">
+    <div class="panel" role="dialog" aria-modal="true" aria-label="Options">
+      <div class="panel-title">OPTIONS</div>
+      <button class="panel-close" id="close-opts" aria-label="Close">✕ CLOSE</button>
+      <div id="panel-opts-content"></div>
+    </div>
+  </div>
+
+  <!-- ===================== GAME (hidden until Start is clicked) ===================== -->
+  <div id="game-wrapper">
+
+    <div id="header">
+      <div>SCORE<br><span id="score-val">0</span></div>
+      <div id="title">PACRAT</div>
+      <div>BEST<br><span id="high-val">0</span></div>
+    </div>
+
+    <canvas id="gameCanvas" width="560" height="620"></canvas>
+
+    <div id="lives-row">
+      <span id="lives-label">LIVES:</span>
+      <canvas class="life-icon" id="life1" width="18" height="18"></canvas>
+      <canvas class="life-icon" id="life2" width="18" height="18"></canvas>
+      <canvas class="life-icon" id="life3" width="18" height="18"></canvas>
+    </div>
+
+    <div id="message">PRESS SPACE TO START</div>
+
+    <div id="mobile-controls">
+      <div class="ctrl-row"><button class="ctrl-btn" id="btn-up">▲</button></div>
+      <div class="ctrl-row">
+        <button class="ctrl-btn" id="btn-left">◀</button>
+        <button class="ctrl-btn" id="btn-down">▼</button>
+        <button class="ctrl-btn" id="btn-right">▶</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===================== SPLASH LOGIC ===================== -->
+  <script>
+    const SPLASH_CONFIG = {
+
+      title:    'PACRAT',
+      subtitle: 'ARCADE EDITION',
+      copy:     '© 2025 YOUR STUDIO',
+
+      theme: {
+        '--primary':   '#FFD700',
+        '--secondary': '#1a1aff',
+        '--accent':    '#ff4fd8',
+      },
+
+      menu: [
+        { label: 'START GAME',  icon: '▶', type: 'start' },
+        { label: 'HOW TO PLAY', icon: '?', type: 'panel', panel: 'how' },
+        { label: 'OPTIONS',     icon: '⚙', type: 'panel', panel: 'options' },
+      ],
+
+      howToPlay: [
+        { keys: '← → ↑ ↓',   description: 'Move Pacrat through the maze' },
+        { keys: 'W A S D',     description: 'Alternative movement keys' },
+        { keys: 'SPACE',       description: 'Start game / restart after game over' },
+        { keys: 'P / ESC',     description: 'Pause & unpause the game' },
+        { keys: 'G',           description: 'Toggle god mode (no death)' },
+        { keys: 'EAT PELLET',  description: 'Frightens all ghosts for a short time' },
+        { keys: 'EAT GHOST',   description: '200 → 400 → 800 → 1600 pts per ghost' },
+        { keys: 'CLEAR MAZE',  description: 'Advance to the next level' },
+      ],
+
+      options: [
+        {
+          label: 'SOUND', id: 'sound',
+          choices: [{ label:'ON', value:'on' }, { label:'OFF', value:'off' }],
+          default: 'on',
+        },
+        {
+          label: 'DIFFICULTY', id: 'difficulty',
+          choices: [{ label:'EASY', value:'easy' }, { label:'NORMAL', value:'normal' }, { label:'HARD', value:'hard' }],
+          default: 'normal',
+        },
+        {
+          label: 'GHOST SPEED', id: 'ghostspeed',
+          choices: [{ label:'SLOW', value:'slow' }, { label:'FAST', value:'fast' }],
+          default: 'slow',
+        },
+      ],
+
+      onStart() {
+        // Fade out splash over 0.5s, then reveal game and load main.js
+        const splash = document.getElementById('splash-screen');
+        splash.classList.add('hiding');
+        setTimeout(() => {
+          splash.remove();
+          document.querySelectorAll('.panel-overlay').forEach(p => p.remove());
+
+          // Reveal the game HTML
+          document.getElementById('game-wrapper').classList.add('visible');
+
+          // Load main.js now that the game DOM is visible
+          const script = document.createElement('script');
+          script.type = 'module';
+          script.src = 'main.js';
+          document.body.appendChild(script);
+        }, 500);
+      },
+
+      onOption(id, value) {
+        console.log(`[SPLASH] option: ${id} = ${value}`);
+      },
+    };
+
+    /* ================================================================
+       ENGINE — no need to edit below this line
+       ================================================================ */
+    (function init(cfg) {
+
+      if (cfg.theme) {
+        const root = document.documentElement.style;
+        for (const [k, v] of Object.entries(cfg.theme)) root.setProperty(k, v);
+      }
+
+      document.getElementById('splash-title').textContent    = cfg.title;
+      document.getElementById('splash-subtitle').textContent = cfg.subtitle || '';
+      document.getElementById('splash-copy').textContent     = cfg.copy || '';
+
+      const menuEl = document.getElementById('splash-menu');
+      let selectedIndex = 0;
+
+      const items = cfg.menu.map((item, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'menu-item' + (i === 0 ? ' selected' : '');
+        btn.setAttribute('aria-label', item.label);
+        btn.innerHTML = `
+          <span class="menu-icon">${item.icon || '▸'}</span>
+          <span class="menu-label">${item.label}</span>
+          <span class="menu-arrow">▶</span>
+        `;
+        btn.addEventListener('click', () => activateItem(i));
+        btn.addEventListener('mouseenter', () => setSelected(i));
+        menuEl.appendChild(btn);
+        return btn;
+      });
+
+      function setSelected(i) {
+        items[selectedIndex].classList.remove('selected');
+        selectedIndex = i;
+        items[selectedIndex].classList.add('selected');
+      }
+
+      function activateItem(i) {
+        const item = cfg.menu[i];
+        if      (item.type === 'start')                       cfg.onStart();
+        else if (item.type === 'panel')                       openPanel(item.panel);
+        else if (item.type === 'link')                        window.location.href = item.href;
+        else if (item.type === 'custom' && item.action)       item.action();
+      }
+
+      document.addEventListener('keydown', e => {
+        if (document.querySelector('.panel-overlay.open')) {
+          if (e.key === 'Escape') closeAllPanels();
+          return;
+        }
+        if (e.key === 'ArrowDown' || e.key === 's') {
+          e.preventDefault();
+          setSelected((selectedIndex + 1) % items.length);
+        } else if (e.key === 'ArrowUp' || e.key === 'w') {
+          e.preventDefault();
+          setSelected((selectedIndex - 1 + items.length) % items.length);
+        } else if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          activateItem(selectedIndex);
+        }
+      });
+
+      const howContent = document.getElementById('panel-how-content');
+      (cfg.howToPlay || []).forEach(row => {
+        const div = document.createElement('div');
+        div.className = 'how-row';
+        div.innerHTML = `<span class="how-key">${row.keys}</span><span class="how-desc">${row.description}</span>`;
+        howContent.appendChild(div);
+      });
+
+      const optsContent = document.getElementById('panel-opts-content');
+      (cfg.options || []).forEach(opt => {
+        const current = localStorage.getItem('splash_opt_' + opt.id) || opt.default;
+        const row = document.createElement('div');
+        row.className = 'opt-row';
+        const label = document.createElement('span');
+        label.className = 'opt-label';
+        label.textContent = opt.label;
+        const toggle = document.createElement('div');
+        toggle.className = 'opt-toggle';
+        opt.choices.forEach(choice => {
+          const btn = document.createElement('button');
+          btn.className = 'opt-btn' + (current === choice.value ? ' active' : '');
+          btn.textContent = choice.label;
+          btn.addEventListener('click', () => {
+            localStorage.setItem('splash_opt_' + opt.id, choice.value);
+            toggle.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if (cfg.onOption) cfg.onOption(opt.id, choice.value);
+          });
+          toggle.appendChild(btn);
+        });
+        row.appendChild(label);
+        row.appendChild(toggle);
+        optsContent.appendChild(row);
+      });
+
+      function openPanel(name) {
+        const id = name === 'how' ? 'panel-how' : 'panel-opts';
+        document.getElementById(id).classList.add('open');
+      }
+
+      function closeAllPanels() {
+        document.querySelectorAll('.panel-overlay').forEach(p => p.classList.remove('open'));
+      }
+
+      document.getElementById('close-how').addEventListener('click', closeAllPanels);
+      document.getElementById('close-opts').addEventListener('click', closeAllPanels);
+      document.querySelectorAll('.panel-overlay').forEach(overlay => {
+        overlay.addEventListener('click', e => { if (e.target === overlay) closeAllPanels(); });
+      });
+
+    })(SPLASH_CONFIG);
+  </script>
+
 </body>
 </html>
