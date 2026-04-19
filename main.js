@@ -4,9 +4,9 @@
 // Receives the chosen character via window.__selectedCharacter.
 
 import { Game }       from './game.js';
-import { Renderer }   from './renderer.js';
-import { HUD }        from './HUD.js';
-import { Input }      from './input.js';
+import { Renderer }   from './src/renderer.js';
+import { HUD }        from './src/HUD.js';
+import { Input }      from './src/input.js';
 import { CHARACTERS } from './characters.js';
 
 function requireEl(id) {
