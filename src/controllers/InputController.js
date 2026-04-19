@@ -125,7 +125,7 @@ export class InputController {
 
   // ---- Mobile D-pad buttons -------------------------------------------
 
-  #bindButtons({ up, down, left, right }) {
+  #bindButtons({ up, down, left, right, god, pause }) {
     const bind = (el, dir) => {
       if (!el) return;
       el.addEventListener('click', () => {
@@ -137,5 +137,8 @@ export class InputController {
     bind(down,  DIR.DOWN);
     bind(left,  DIR.LEFT);
     bind(right, DIR.RIGHT);
+
+    if (god) god.addEventListener('click', () => this.onGodMode());
+    if (pause) pause.addEventListener('click', () => this.onPause());
   }
 }
