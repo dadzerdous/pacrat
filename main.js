@@ -40,6 +40,7 @@ const input = new InputController({
     left:  document.getElementById('btn-left'),
     right: document.getElementById('btn-right'),
   },
+  canvas,   // enables click-to-start and touch swipe
 });
 
 // --- Wire it up and go -------------------------------------------------
