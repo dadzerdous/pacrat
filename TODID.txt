@@ -1,0 +1,5 @@
+added splaSH PAGE
+loading splash from inside index first
+addd todid
+
+worked on gyrorunner
