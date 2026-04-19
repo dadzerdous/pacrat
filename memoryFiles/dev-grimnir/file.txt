@@ -1,0 +1,111 @@
+# Pacrat — Session Memory
+
+## Project
+Pac-Man clone refactored from monolith into MVC ES module architecture.
+Repo: github.com/dadzerdous/Pacrat, branch: dev
+GitHub Pages serves from dev: https://dadzerdous.github.io/pacrat/
+
+## User Context
+Backend-focused developer (username: dev-grimnir). Not comfortable with CLI. Edits via GitHub web UI. Tests on Brave (Windows desktop) and phone. Prefers "line 47, change X to Y" style answers. Pushes back productively on architecture decisions. Will call out bad instructions directly — own mistakes, don't fabricate.
+
+## Raw File URLs (all on dev branch)
+These URLs are confirmed fetchable when pasted by the user:
+- https://raw.githubusercontent.com/dadzerdous/Pacrat/dev/main.js
+- https://raw.githubusercontent.com/dadzerdous/Pacrat/dev/src/controllers/Game.js
+- https://raw.githubusercontent.com/dadzerdous/Pacrat/dev/src/controllers/InputController.js
+- https://raw.githubusercontent.com/dadzerdous/Pacrat/dev/src/controllers/StateMachine.js
+- https://raw.githubusercontent.com/dadzerdous/Pacrat/dev/src/controllers/ModeScheduler.js
+- https://raw.githubusercontent.com/dadzerdous/Pacrat/dev/src/controllers/CollisionSystem.js
+- https://raw.githubusercontent.com/dadzerdous/Pacrat/dev/src/models/Entity.js
+- https://raw.githubusercontent.com/dadzerdous/Pacrat/dev/src/models/Pacman.js
+- https://raw.githubusercontent.com/dadzerdous/Pacrat/dev/src/models/Ghost.js
+- https://raw.githubusercontent.com/dadzerdous/Pacrat/dev/src/models/Maze.js
+- https://raw.githubusercontent.com/dadzerdous/Pacrat/dev/src/const/ghostAI.js
+- https://raw.githubusercontent.com/dadzerdous/Pacrat/dev/src/maze-templates/MazeTemplate.js
+- https://raw.githubusercontent.com/dadzerdous/Pacrat/dev/src/views/Renderer.js
+- https://raw.githubusercontent.com/dadzerdous/Pacrat/dev/styles.css
+- https://raw.githubusercontent.com/dadzerdous/Pacrat/refs/heads/dev/index.html
+
+## Current State of the Game
+- Core gameplay works: Pacman moves in all directions, eats dots, eats pellets, ghosts chase, frightened mode works, eating ghosts works, win detection works, death/respawn works, game over works.
+- Two levels exist (LEVEL_1, LEVEL_2). Level advancement works — "LEVEL CLEAR! SPACE" waits for input, then loads next map. Final level shows "YOU WIN! SPACE" and resets to level 1.
+- Pause feature implemented (P or Escape toggles).
+- God mode implemented (G key toggles — infinite lives, death animation still plays).
+- Ghost house has top and bottom doors so ghosts can exit regardless of Pacman's position.
+- Eaten ghosts fly to GHOST_SPAWN at (13, 14) inside the house, revive there, AI paths them out.
+- Responsive CSS layout — canvas scales to viewport, D-pad always visible, nothing clipped.
+- D-pad works on mobile for touch input. Keyboard (arrows + WASD) works on desktop.
+
+## File Layout
+index.html
+styles.css
+main.js
+src/
+├── const/
+│   ├── direction.js
+│   └── ghostAI.js
+├── controllers/
+│   ├── CollisionSystem.js
+│   ├── Game.js
+│   ├── InputController.js
+│   ├── ModeScheduler.js
+│   └── StateMachine.js
+├── maze-templates/
+│   └── MazeTemplate.js
+├── models/
+│   ├── Entity.js
+│   ├── Ghost.js
+│   ├── Maze.js
+│   └── Pacman.js
+└── views/
+├── HUD.js
+└── Renderer.js
+
+## Architecture Summary
+- MVC with constructor injection and callbacks. No globals.
+- Game.js is the orchestrator — owns tick loop, all models, all wiring.
+- StateMachine: discrete states (ready/playing/paused/dying/over/win). Timer auto-cancel on transition.
+- ModeScheduler: concurrent frame-based timers (scatter/chase cycle, fright countdown, house exits, eaten returns).
+- CollisionSystem: Pacman-vs-dots and Pacman-vs-ghosts. Reports events via callbacks, doesn't know about StateMachine or HUD.
+- Ghost AI: strategy pattern. Pure target functions in ghostAI.js, shared chooseNextDirection algorithm. Ghost has-a targetFn, not is-a subclass.
+- Ghost state: two orthogonal axes — lifeState ('alive'|'eaten') and frightened (bool).
+- Ghost AI decisions gated by lastDecisionTile — decides once per integer tile crossing, not every frame.
+- Renderer: reads model state, never writes. Owns frame counter for visual-only animations (pellet pulse, fright flash).
+- HUD: DOM-based, event-driven, separate from canvas Renderer.
+- Maze.loadTemplate(template) swaps level data without rebuilding the Maze object.
+- LEVELS array in MazeTemplate.js — Game tracks levelIndex and advances through them.
+- Float positions for movement, integer positions for logic. Consistent use of Math.round (not Math.floor).
+- Pacman perpendicular turns use tile-based check (isPassableTile) with perpendicular axis snap, not float corner collision (canMove).
+
+## Key Constants
+- CELL = 20px (rendering tile size)
+- COLLISION_MARGIN = 0.45 (Maze.js, float collision box half-width)
+- COLLISION_RADIUS_SQ = 0.64 (CollisionSystem, ghost-pacman collision)
+- Pacman speed = 0.12, Ghost speed = 0.09, Frightened ghost speed = 0.06
+- FRIGHT_FRAMES = 400, FRIGHT_WARN_FRAMES = 100
+- SCATTER_FRAMES = 300, CHASE_FRAMES = 600
+- House exit timers: pinky=120, inky=240, clyde=360 frames
+- GHOST_SPAWN = { x: 13, y: 14 } (inside house, center)
+- EATEN_RETURN_SPEED = 0.25
+- STARTING_LIVES = 3, DEATH_ANIMATION_MS = 1500
+- Canvas: 560x620 (28 cols × 31 rows × 20px)
+
+## Maze Constraints for New Levels
+- Ghost house structure (roughly cols 9-18, rows 11-17) must stay identical across all maps.
+- Tunnel row 14 needs open tiles at far edges for wrapping.
+- Everything else is free — different wall layouts, corridor widths, dot placement, pellet positions.
+- Row 16 has a bottom door in the ghost house (cols 12-15 set to 4). Must be preserved.
+
+## Planned Features (Not Yet Built)
+- Level indicator in HUD (show current level number)
+- Mines: Pacman drops persistent mines that affect ghosts. Allocation tied to dots eaten (~1 mine per 30 dots). Design options discussed:
+  - Mine kills ghost (sends eyes home)
+  - Mine stuns ghost for N frames
+  - Mine corrupts ghost (swaps targetFn to hunt other ghosts)
+  - Mine turns ghost into a second Pacman (eats dots — cooperative or competitive scoring TBD)
+- Mines are persistent per level, don't carry over between levels, use-it-or-lose-it.
+- Procedural maze generation discussed but deferred — hand-design more maps first to build intuition for what makes good layouts.
+
+## Known Gotchas
+- Multiple visually identical rows in MazeTemplate.js make find-and-replace error-prone. Use surrounding context to disambiguate.
+- Long conversations burn through message limits faster due to full history processing each turn.
