@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wat</title>
+  <title>Pacrat</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
@@ -473,12 +473,29 @@
     <div id="message">MOVE OR CLICK TO START</div>
 
     <div id="mobile-controls">
-      <div class="ctrl-row"><button class="ctrl-btn" id="btn-up">▲</button></div>
-      <div class="ctrl-row">
-        <button class="ctrl-btn" id="btn-left">◀</button>
-        <button class="ctrl-btn" id="btn-down">▼</button>
-        <button class="ctrl-btn" id="btn-right">▶</button>
+
+      <!-- Left column: God Mode -->
+      <div class="ctrl-side ctrl-side-left">
+        <button class="ctrl-btn ctrl-btn-special" id="btn-god">G</button>
+        <span class="ctrl-label">GOD</span>
       </div>
+
+      <!-- Centre: D-pad -->
+      <div class="ctrl-dpad">
+        <div class="ctrl-row"><button class="ctrl-btn" id="btn-up">&#9650;</button></div>
+        <div class="ctrl-row">
+          <button class="ctrl-btn" id="btn-left">&#9664;</button>
+          <button class="ctrl-btn" id="btn-down">&#9660;</button>
+          <button class="ctrl-btn" id="btn-right">&#9654;</button>
+        </div>
+      </div>
+
+      <!-- Right column: Pause -->
+      <div class="ctrl-side ctrl-side-right">
+        <button class="ctrl-btn ctrl-btn-special" id="btn-pause">P</button>
+        <span class="ctrl-label">PAUSE</span>
+      </div>
+
     </div>
 
   </div>
