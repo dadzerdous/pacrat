@@ -39,7 +39,7 @@ const HOUSE_EXIT_FRAMES = {
 const EATEN_RETURN_SPEED = 0.25;
 
 // Where eaten ghosts respawn. Matches the ghost house center.
-const GHOST_SPAWN = { x: 13, y: 11 };
+const GHOST_SPAWN = { x: 13, y: 14 };
 
 // Arrival tolerance — when the eyes get this close to spawn, we revive.
 const ARRIVAL_DIST = 0.2;
@@ -152,33 +152,21 @@ export class ModeScheduler {
   }
 
   // --- Private: house exits -------------------------------------------
-
   #advanceHouseExits() {
-    for (const g of this.#ghosts) {
-      const t = this.#houseTimers[g.name];
-      if (t === undefined || t <= 0) continue;
-      this.#houseTimers[g.name]--;
-
-      // When the timer just hit zero, teleport the ghost to the door
-      // corridor above the house and force its direction to LEFT so the
-      // AI takes over from a position where pathing-toward-Pacman naturally
-      // leads away from the house instead of back into it.
-      if (this.#houseTimers[g.name] === 0) {
-        g.x = GHOST_SPAWN.x;
-        g.y = GHOST_SPAWN.y;
-        g.dir = [-1, 0];          // LEFT — arbitrary but consistent and away from spawn column center
-        g.lastDecisionTile = null; // Force AI to re-decide at the new tile
+      for (const g of this.#ghosts) {
+        const t = this.#houseTimers[g.name];
+        if (t === undefined || t <= 0) continue;
+        this.#houseTimers[g.name]--;
       }
     }
-  }
-
-  /** True when the given ghost is allowed to move. Game's entity update
-   *  loop checks this before calling `ghost.update()` — keeps the "don't
-   *  move until released" rule in one place. */
-  canGhostMove(ghost) {
-    const t = this.#houseTimers[ghost.name];
-    return t === undefined || t <= 0;
-  }
+  
+    /** True when the given ghost is allowed to move. Game's entity update
+     *  loop checks this before calling `ghost.update()` — keeps the "don't
+     *  move until released" rule in one place. */
+    canGhostMove(ghost) {
+      const t = this.#houseTimers[ghost.name];
+      return t === undefined || t <= 0;
+    }
 
   // --- Private: eaten-ghost returns -----------------------------------
 
@@ -195,8 +183,7 @@ export class ModeScheduler {
       if (dist < ARRIVAL_DIST) {
         g.x = GHOST_SPAWN.x;
         g.y = GHOST_SPAWN.y;
-        g.dir = [-1, 0];          // LEFT — same convention as house-exit
-        g.lastDecisionTile = null; // Force AI to re-decide at the new tile
+        g.lastDecisionTile = null;
         g.revive();
       } else {
         g.x += (dx / dist) * EATEN_RETURN_SPEED;
