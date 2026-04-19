@@ -43,7 +43,7 @@ export class Game {
     });
 
     this.#stateMachine = new StateMachine({
-      ready:   { onEnter: () => this.#hud.setMessage('PRESS SPACE TO START') },
+      ready:   { onEnter: () => this.#hud.setMessage('MOVE OR CLICK TO START') },
       playing: { onEnter: () => this.#hud.setMessage('') },
       paused:  { onEnter: () => this.#hud.setMessage('PAUSED') },
       dying:   { onEnter: () => this.#enterDying() },
@@ -149,15 +149,15 @@ export class Game {
 
   #enterOver() {
     this.#updateHighScore();
-    this.#hud.setMessage('GAME OVER - SPACE');
+    this.#hud.setMessage('GAME OVER - MOVE OR CLICK');
   }
 
   #enterWin() {
     this.#updateHighScore();
     if (this.#levelIndex < LEVELS.length - 1) {
-      this.#hud.setMessage('LEVEL CLEAR! SPACE');
+      this.#hud.setMessage('LEVEL CLEAR! MOVE OR CLICK');
     } else {
-      this.#hud.setMessage('YOU WIN! SPACE');
+      this.#hud.setMessage('YOU WIN! MOVE OR CLICK');
     }
   }
 
