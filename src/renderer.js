@@ -9,7 +9,6 @@ const CELL         = 20;
 const WALL_COLOR   = '#1a1aff';
 const WALL_GLOW    = '#2233ff';
 const DOT_COLOR    = '#FFD4A0';
-const PLAYER_COLOR = '#FFD700';
 
 export class Renderer {
   /** @param canvas — the <canvas> element; Renderer is the sole owner. */
@@ -79,25 +78,30 @@ export class Renderer {
 
   #drawPlayer(player) {
     const ctx = this.#ctx;
-    const px = player.x * CELL + CELL / 2;
-    const py = player.y * CELL + CELL / 2;
-    const r  = CELL / 2 - 1;
+    const px  = player.x * CELL + CELL / 2;
+    const py  = player.y * CELL + CELL / 2;
+    const r   = CELL / 2 - 1;
+    const fontSize = CELL - 2;
 
     if (player.dead) {
-      const pct   = Math.min(player.deathTimer / 60, 1);
-      const sweep = Math.PI * (1 + pct);
-      ctx.fillStyle   = PLAYER_COLOR;
-      ctx.shadowColor = PLAYER_COLOR;
-      ctx.shadowBlur  = 15;
-      ctx.beginPath();
-      ctx.moveTo(px, py);
-      ctx.arc(px, py, r, 0, sweep);
-      ctx.closePath();
-      ctx.fill();
-      ctx.shadowBlur = 0;
+      // Shrink the emoji as the death timer advances
+      const pct  = Math.min(player.deathTimer / 60, 1);
+      const size = Math.round(fontSize * (1 - pct));
+      if (size <= 0) return;
+      ctx.save();
+      ctx.font         = `${size}px serif`;
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.globalAlpha  = 1 - pct;
+      ctx.translate(px, py);
+      // Spin while dying
+      ctx.rotate(pct * Math.PI * 2);
+      ctx.fillText(player.emoji, 0, 0);
+      ctx.restore();
       return;
     }
 
+    // Rotate emoji to face movement direction
     let angle = 0;
     const [dx, dy] = player.dir;
     if      (dx ===  1) angle = 0;
@@ -105,16 +109,17 @@ export class Renderer {
     else if (dy === -1) angle = -Math.PI / 2;
     else if (dy ===  1) angle = Math.PI / 2;
 
-    const mouth = player.mouthPhase * Math.PI;
-    ctx.fillStyle   = PLAYER_COLOR;
-    ctx.shadowColor = PLAYER_COLOR;
-    ctx.shadowBlur  = 12;
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.arc(px, py, r, angle + mouth, angle + Math.PI * 2 - mouth);
-    ctx.closePath();
-    ctx.fill();
-    ctx.shadowBlur = 0;
+    // Subtle bob when moving
+    const bob = player.waiting ? 0 : Math.sin(this.#frame * 0.25) * 1.5;
+
+    ctx.save();
+    ctx.font         = `${fontSize}px serif`;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.translate(px, py + bob);
+    ctx.rotate(angle);
+    ctx.fillText(player.emoji, 0, 0);
+    ctx.restore();
   }
 
   // ---- Ghosts -----------------------------------------------------------
