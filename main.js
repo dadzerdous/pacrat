@@ -1,11 +1,13 @@
 // main.js
 // Entry point. Grabs DOM elements, builds all objects, and starts the loop.
-// This and input.js are the only files that touch the DOM directly.
+// Called by index.html after the character select screen resolves.
+// Receives the chosen character via window.__selectedCharacter.
 
-import { Game }     from './src/game.js';
-import { Renderer } from './src/renderer.js';
-import { HUD }      from './src/HUD.js';
-import { Input }    from './src/input.js';
+import { Game }       from './src/game.js';
+import { Renderer }   from './src/renderer.js';
+import { HUD }        from './src/HUD.js';
+import { Input }      from './src/input.js';
+import { CHARACTERS } from './src/characters.js';
 
 function requireEl(id) {
   const el = document.getElementById(id);
@@ -36,5 +38,9 @@ const input = new Input({
   canvas,
 });
 
-const game = new Game({ renderer, input, hud });
+// Character is set by the select screen before main.js loads.
+// Falls back to the first character if somehow not set.
+const character = window.__selectedCharacter ?? CHARACTERS[0];
+
+const game = new Game({ renderer, input, hud, character });
 game.start();
