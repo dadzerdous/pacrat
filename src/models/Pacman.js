@@ -12,17 +12,18 @@ export class Pacman extends Entity {
     // the classic arcade start position between columns 13 and 14.
     super({ x: 13.5, y: 23, speed: 0.12, dir: DIR.LEFT });
 
-    this.nextDir = DIR.LEFT;   // buffered input — applied when the turn is legal
+    this.nextDir = null;       // no buffered input yet — null means "waiting"
+    this.waiting = true;       // true until the player gives their first direction
     this.mouthPhase = 0.25;    // 0 = closed, ~0.35 = wide open
     this.mouthOpening = true;  // animation direction flag
     this.dead = false;
     this.deathTimer = 0;       // frames since death; renderer uses this for the spiral
   }
 
-  /** Called by InputController. We only store the intent; committing to it
-   *  happens in update() when we can verify the direction is passable. */
+  /** Called by InputController. Receiving a direction un-freezes Pacman. */
   queueDirection(dir) {
     this.nextDir = dir;
+    this.waiting = false;
   }
 
   update(maze) {
@@ -31,19 +32,21 @@ export class Pacman extends Entity {
       return;
     }
 
+    // Don't move until the player has given at least one direction input.
+    if (this.waiting) {
+      this.#animateMouth();
+      return;
+    }
+
     // Try the buffered direction. We can only legally turn into a new lane
     // if the tile one step away in that direction is passable AND we're
     // close enough to the perpendicular axis to snap into the new lane.
-    // Float canMove with corner checks fails perpendicular turns mid-corridor
-    // because the trailing corner straddles two columns/rows.
     const cx = Math.round(this.x);
     const cy = Math.round(this.y);
     const targetCol = cx + this.nextDir[0];
     const targetRow = cy + this.nextDir[1];
     if (maze.isPassableTile(targetCol, targetRow)) {
       this.dir = this.nextDir;
-      // Snap the perpendicular axis so we're aligned with the new lane.
-      // Turning vertically? Snap x. Turning horizontally? Snap y.
       if (this.nextDir[1] !== 0) this.x = cx;
       if (this.nextDir[0] !== 0) this.y = cy;
     }
