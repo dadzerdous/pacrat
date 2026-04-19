@@ -41,9 +41,11 @@ export class Scheduler {
   get frightTimer() { return this.#frightTimer; }
   get isFrightened(){ return this.#frightTimer > 0; }
 
-  /** Called when the player eats a power pellet. */
-  onPelletEaten() {
-    this.#frightTimer = FRIGHT_FRAMES;
+  /** Called when the player eats a power pellet.
+   *  @param frightFrames — override duration from character stats
+   */
+  onPelletEaten(frightFrames = FRIGHT_FRAMES) {
+    this.#frightTimer = frightFrames;
     for (const g of this.#ghosts) {
       if (g.lifeState === 'alive') {
         g.frighten();
