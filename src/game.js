@@ -10,8 +10,8 @@ import { Scheduler }   from './scheduler.js';
 import { Collisions }  from './collisions.js';
 import { StateMachine } from './stateMachine.js';
 import { LEVELS }      from './levels.js';
+import { CHARACTERS }  from './characters.js';
 
-const STARTING_LIVES    = 3;
 const DEATH_PAUSE_MS    = 1500;
 
 const GHOST_CONFIG = [
@@ -22,14 +22,15 @@ const GHOST_CONFIG = [
 ];
 
 export class Game {
-  constructor({ renderer, input, hud }) {
-    this.#renderer = renderer;
-    this.#input    = input;
-    this.#hud      = hud;
+  constructor({ renderer, input, hud, character = CHARACTERS[0] }) {
+    this.#renderer  = renderer;
+    this.#input     = input;
+    this.#hud       = hud;
+    this.#character = character;
 
     this.#levelIndex = 0;
     this.#maze   = new Maze(LEVELS[0]);
-    this.#player = new Player();
+    this.#player = new Player(this.#character);
     this.#ghosts = GHOST_CONFIG.map(cfg => new Ghost(cfg));
     this.#blinky = this.#ghosts.find(g => g.name === 'blinky');
 
@@ -37,7 +38,7 @@ export class Game {
 
     this.#collisions = new Collisions({
       onScore:        (pts) => this.#addScore(pts),
-      onPelletEaten:  ()    => this.#scheduler.onPelletEaten(),
+      onPelletEaten:  ()    => this.#scheduler.onPelletEaten(this.#character.frightFrames),
       onPlayerCaught: ()    => this.#states.transition('dying'),
       onGhostEaten:   ()    => {},
     });
@@ -63,12 +64,12 @@ export class Game {
 
     this.#score     = 0;
     this.#highScore = 0;
-    this.#lives     = STARTING_LIVES;
+    this.#lives     = this.#character.lives;
     this.#hud.setScore(this.#score);
     this.#hud.setLives(this.#lives);
   }
 
-  #renderer; #input; #hud;
+  #renderer; #input; #hud; #character;
   #maze; #player; #ghosts; #blinky;
   #scheduler; #collisions; #states;
   #score; #highScore; #lives; #levelIndex;
@@ -154,7 +155,7 @@ export class Game {
   // ---- Lifecycle --------------------------------------------------------
 
   #respawn() {
-    this.#player  = new Player();
+    this.#player  = new Player(this.#character);
     this.#ghosts  = GHOST_CONFIG.map(cfg => new Ghost(cfg));
     this.#blinky  = this.#ghosts.find(g => g.name === 'blinky');
     this.#scheduler = new Scheduler(this.#ghosts);
@@ -163,7 +164,7 @@ export class Game {
 
   #resetGame() {
     this.#score      = 0;
-    this.#lives      = STARTING_LIVES;
+    this.#lives      = this.#character.lives;
     this.#levelIndex = 0;
     this.#hud.setScore(this.#score);
     this.#hud.setLives(this.#lives);
