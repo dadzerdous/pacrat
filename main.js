@@ -3,11 +3,11 @@
 // Called by index.html after the character select screen resolves.
 // Receives the chosen character via window.__selectedCharacter.
 
-import { Game }       from './src/game.js';
-import { Renderer }   from './src/renderer.js';
-import { HUD }        from './src/HUD.js';
-import { Input }      from './src/input.js';
-import { CHARACTERS } from './src/characters.js';
+import { Game }       from './game.js';
+import { Renderer }   from './renderer.js';
+import { HUD }        from './HUD.js';
+import { Input }      from './input.js';
+import { CHARACTERS } from './characters.js';
 
 function requireEl(id) {
   const el = document.getElementById(id);
