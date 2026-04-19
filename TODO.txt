@@ -1,9 +1,4 @@
-optimize for mobile
--god mode
--pause
--start
 
-pause after death tipp move
 
 ghost gets stuck in corner
 
