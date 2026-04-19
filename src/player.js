@@ -7,16 +7,19 @@ import { Entity } from './entity.js';
 import { DIR } from './constants.js';
 
 export class Player extends Entity {
-  constructor() {
-    // Spawn at (13.5, 23) — half-tile X matches the classic arcade position.
-    super({ x: 13.5, y: 23, speed: 0.12, dir: DIR.LEFT });
+  /**
+   * @param character — entry from characters.js with speed and emoji.
+   */
+  constructor(character = { speed: 0.12, emoji: '🐀' }) {
+    super({ x: 13.5, y: 23, speed: character.speed, dir: DIR.LEFT });
 
-    this.nextDir = null;      // null = no input yet
-    this.waiting = true;      // frozen until player gives first direction
-    this.mouthPhase = 0.25;   // 0 = closed, ~0.35 = wide open
+    this.emoji        = character.emoji;
+    this.nextDir      = null;
+    this.waiting      = true;
+    this.mouthPhase   = 0.25;
     this.mouthOpening = true;
-    this.dead = false;
-    this.deathTimer = 0;      // frames since death; renderer uses this for the spiral
+    this.dead         = false;
+    this.deathTimer   = 0;
   }
 
   /** Queue a direction from input. Also un-freezes the player. */
