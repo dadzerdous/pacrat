@@ -17,11 +17,23 @@ function requireEl(id) {
 
 const canvas = requireEl('gameCanvas');
 
+const MAX_LIFE_ICONS = 10;
+const livesContainer = requireEl('lives-icons');
+const lifeCanvases = Array.from({ length: MAX_LIFE_ICONS }, (_, i) => {
+  const c = document.createElement('canvas');
+  c.width = 18;
+  c.height = 18;
+  c.className = 'life-icon';
+  c.id = `life${i + 1}`;
+  livesContainer.appendChild(c);
+  return c;
+});
+
 const hud = new HUD({
   scoreEl:      requireEl('score-val'),
-  highEl:       requireEl('high-val'), 
+  highEl:       requireEl('high-val'),
   messageEl:    requireEl('message'),
-  lifeCanvases: [requireEl('life1'), requireEl('life2'), requireEl('life3')],
+  lifeCanvases,
 });
 
 const renderer = new Renderer(canvas);
