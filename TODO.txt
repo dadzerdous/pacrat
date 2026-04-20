@@ -1,4 +1,10 @@
-optimize for mobile
+matt 
+start trying to create pacrat in github
+join chatgpt
+redo framework
+create a new github account that we both can log in as. make dev-grimnirvandcdadzerdous as collabs
+
+optimize controls
 -start
 -Update WASD buttons.  Greater spacing would allow for better control and optimize screen usage. Instead of WASD stacked, layout could be horizontal and buttons could be larger.
 -Capture swype events to move pacrat.
@@ -18,3 +24,15 @@ In general
 -Update pacrat death animation to reflect original pacman.  Pacrat folds to zero.
 -Introduce sounds
 -Add profile option
+
+ghost gets stuck in corner
+
+better control scheme (phone tilt?)
+create new emojis 
+charecter select
+
+change lives icon
+growing levels
+
+ENEMY TYPES
+
