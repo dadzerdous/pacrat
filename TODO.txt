@@ -1,8 +1,6 @@
-splash page
+
 
 optimize for mobile
--god mode
--pause
 -start
 -Update WASD buttons.  Greater spacing would allow for better control and optimize screen usage. Instead of WASD stacked, layout could be horizontal and buttons could be larger.
 -Capture swype events to move pacrat.
