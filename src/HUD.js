@@ -27,31 +27,26 @@ export class HUD {
   setHighScore(n) { this.#highEl.textContent = n; }
   setMessage(s)   { this.#messageEl.textContent = s; }
 
-  /** Redraw life icons. Shows current lives remaining (not lives+1).
-   *  If lives > number of icon slots, shows a count number instead. */
+  /** Redraw life icons. Shows up to 10 icons, then falls back to a number. */
   setLives(lives) {
-    const slots = this.#lifeCtxs.length;
-    const shown = Math.max(0, lives);
+    const slots = this.#lifeCtxs.length; // up to 10
+    const count = Math.max(0, lives);
 
     for (let i = 0; i < slots; i++) {
       const ctx = this.#lifeCtxs[i];
       ctx.clearRect(0, 0, ICON_SIZE, ICON_SIZE);
-      if (i < shown && shown <= slots) {
-        // Normal case — draw icons
-        this.#drawIcon(ctx);
-      } else if (i === 0 && shown > slots) {
-        // Too many lives to show — draw a number instead
-        ctx.fillStyle = '#FFD700';
-        ctx.font = '7px monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(`x${shown}`, ICON_SIZE / 2, ICON_SIZE / 2);
+
+      if (count > slots) {
+        // Too many for icons — first slot shows "x{n}", rest blank
+        if (i === 0) this.#drawNumber(ctx, `x${count}`);
+      } else {
+        if (i < count) this.#drawIcon(ctx);
       }
     }
   }
 
   #drawIcon(ctx) {
-    ctx.fillStyle  = '#FFD700';
+    ctx.fillStyle   = '#FFD700';
     ctx.shadowColor = '#FFD700';
     ctx.shadowBlur  = 8;
     ctx.beginPath();
@@ -60,5 +55,13 @@ export class HUD {
     ctx.closePath();
     ctx.fill();
     ctx.shadowBlur = 0;
+  }
+
+  #drawNumber(ctx, text) {
+    ctx.fillStyle    = '#FFD700';
+    ctx.font         = `bold 8px monospace`;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, ICON_SIZE / 2, ICON_SIZE / 2);
   }
 }
