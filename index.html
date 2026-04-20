@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>acrat</title>
+  <title>spacrat</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
@@ -642,9 +642,7 @@
 
     <div id="lives-row">
       <span id="lives-label">LIVES:</span>
-      <canvas class="life-icon" id="life1" width="18" height="18"></canvas>
-      <canvas class="life-icon" id="life2" width="18" height="18"></canvas>
-      <canvas class="life-icon" id="life3" width="18" height="18"></canvas>
+      <div id="lives-icons"></div>
     </div>
 
     <div id="message">MOVE OR CLICK TO START</div>
@@ -683,7 +681,7 @@
 
       title:    'PACRAT',
       subtitle: 'ARCADE EDITION',
-      copy:     '© 2026 SINGLEFRAMEGAMES',
+      copy:     '© 2025 YOUR STUDIO',
 
       theme: {
         '--primary':   '#FFD700',
@@ -860,7 +858,7 @@
 
   <!-- ===================== CHARACTER SELECT LOGIC ===================== -->
   <script type="module">
-    import { CHARACTERS } from './characters.js';
+    import { CHARACTERS } from './src/characters.js';
 
     const screen  = document.getElementById('char-screen');
     const grid    = document.getElementById('char-grid');
