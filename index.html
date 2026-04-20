@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>aaapacrat</title>
+  <title>spacrat</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
@@ -638,11 +638,13 @@
       <div>BEST<br><span id="high-val">0</span></div>
     </div>
 
-    <canvas id="gameCanvas" width="560" height="620"></canvas>
+    <canvas id="gameCanvas" width="220" height="220"></canvas>
 
     <div id="lives-row">
       <span id="lives-label">LIVES:</span>
-      <div id="lives-icons"></div>
+      <canvas class="life-icon" id="life1" width="18" height="18"></canvas>
+      <canvas class="life-icon" id="life2" width="18" height="18"></canvas>
+      <canvas class="life-icon" id="life3" width="18" height="18"></canvas>
     </div>
 
     <div id="message">MOVE OR CLICK TO START</div>
