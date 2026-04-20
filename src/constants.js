@@ -19,6 +19,8 @@ export const TILE = {
   DOT:    2,
   PELLET: 3,
   EMPTY:  4,
+  EXIT:   5,  // waypoint — activates once all dots are eaten
+  HOUSE:  6,  // ghost house interior — passable only by ghosts
 };
 
 // --- Frightened timing -------------------------------------------------
