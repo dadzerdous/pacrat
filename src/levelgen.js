@@ -19,8 +19,8 @@ import { TILE } from './constants.js';
 // Ghost speed and fright duration scale with level.
 
 export function getLevelConfig(levelIndex) {
-  const size       = 11 + levelIndex * 2;               // 11, 13, 15 ...
-  const ghostCount = Math.min(2 + Math.floor(levelIndex / 2), 4);
+  const size       = 15 + levelIndex * 2;               // 15, 17, 19 ...
+  const ghostCount = Math.min(3 + Math.floor(levelIndex / 2), 4);
   const ghostSpeed = 0.07 + levelIndex * 0.005;          // gets faster
   const frightFrames = Math.max(150, 400 - levelIndex * 30); // gets shorter
 
