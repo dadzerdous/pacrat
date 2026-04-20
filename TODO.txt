@@ -27,9 +27,6 @@ In general
 
 ghost gets stuck in corner
 
-better control scheme (phone tilt?)
-create new emojis 
-charecter select
 
 change lives icon
 growing levels
