@@ -58,60 +58,63 @@ export function generateLevel(levelIndex) {
 }
 
 // --- Quarter generation -----------------------------------------------
+// Strategy: start fully open, then place wall ISLANDS (rectangular blocks)
+// inside the quarter. This guarantees corridors exist everywhere by default,
+// and wall blocks create the maze structure. Much more reliable than
+// trying to carve paths through a wall-filled grid.
 
 function buildQuarter(qw, qh) {
-  const q = grid(qw, qh, TILE.WALL);
+  // Start fully open
+  const q = grid(qw, qh, TILE.EMPTY);
 
-  // Outer corridors along top and left edges
-  for (let x = 1; x < qw - 1; x++) q[1][x] = TILE.EMPTY;
-  for (let y = 1; y < qh - 1; y++) q[y][1] = TILE.EMPTY;
+  // Outer border is always wall
+  for (let x = 0; x < qw; x++) { q[0][x] = TILE.WALL; q[qh-1][x] = TILE.WALL; }
+  for (let y = 0; y < qh; y++) { q[y][0] = TILE.WALL; q[y][qw-1] = TILE.WALL; }
 
-  // Horizontal bands — proportional spacing
-  const hStep = Math.max(2, Math.floor(qh / 4));
-  for (let y = hStep; y < qh - 1; y += hStep) {
-    for (let x = 1; x < qw - 1; x++) {
-      if (rand() < 0.8) q[y][x] = TILE.EMPTY;
+  // Place wall islands — rectangular blocks of varying sizes
+  // Density scales with quarter size so small mazes aren't too open
+  const islandCount = Math.floor((qw * qh) / 8);
+
+  for (let i = 0; i < islandCount; i++) {
+    // Island size: 1×2, 2×1, 1×3, 3×1, or 2×2
+    const iw = randInt(1, Math.min(3, Math.floor(qw / 3)));
+    const ih = randInt(1, Math.min(3, Math.floor(qh / 3)));
+
+    // Position: must leave at least 1 corridor gap from outer wall
+    const sx = randInt(2, qw - iw - 2);
+    const sy = randInt(2, qh - ih - 2);
+
+    for (let y = sy; y < sy + ih; y++)
+      for (let x = sx; x < sx + iw; x++)
+        q[y][x] = TILE.WALL;
+  }
+
+  // Add some horizontal wall strips to create corridor structure
+  const hStrips = Math.max(1, Math.floor(qh / 5));
+  for (let i = 0; i < hStrips; i++) {
+    const y  = randInt(2, qh - 3);
+    const x1 = randInt(2, Math.floor(qw / 2));
+    const x2 = randInt(x1 + 1, qw - 2);
+    // Leave a gap so the corridor isn't fully blocked
+    const gapX = randInt(x1, x2);
+    for (let x = x1; x <= x2; x++) {
+      if (x !== gapX) q[y][x] = TILE.WALL;
     }
   }
 
-  // Vertical bands
-  const vStep = Math.max(2, Math.floor(qw / 4));
-  for (let x = vStep; x < qw - 1; x += vStep) {
-    for (let y = 1; y < qh - 1; y++) {
-      if (rand() < 0.7) q[y][x] = TILE.EMPTY;
+  // Add some vertical wall strips
+  const vStrips = Math.max(1, Math.floor(qw / 5));
+  for (let i = 0; i < vStrips; i++) {
+    const x  = randInt(2, qw - 3);
+    const y1 = randInt(2, Math.floor(qh / 2));
+    const y2 = randInt(y1 + 1, qh - 2);
+    const gapY = randInt(y1, y2);
+    for (let y = y1; y <= y2; y++) {
+      if (y !== gapY) q[y][x] = TILE.WALL;
     }
-  }
-
-  // Random box loops for visual variety
-  const loops = Math.max(2, Math.floor(qw / 3));
-  for (let i = 0; i < loops; i++) {
-    const sx = randInt(2, Math.max(2, qw - 4));
-    const sy = randInt(2, Math.max(2, qh - 4));
-    const bw = randInt(2, Math.min(3, qw - sx - 1));
-    const bh = randInt(2, Math.min(3, qh - sy - 1));
-    carveBox(q, sx, sy, bw, bh, qw, qh);
-  }
-
-  // Random connectors
-  const punches = qw * qh / 4;
-  for (let i = 0; i < punches; i++) {
-    const x = randInt(1, qw - 2);
-    const y = randInt(1, qh - 2);
-    if (rand() < 0.4) q[y][x] = TILE.EMPTY;
   }
 
   return q;
-}
-
-function carveBox(q, sx, sy, bw, bh, qw, qh) {
-  for (let x = sx; x <= sx + bw && x < qw - 1; x++) {
-    if (sy > 0)       q[sy][x]      = TILE.EMPTY;
-    if (sy + bh < qh) q[sy + bh][x] = TILE.EMPTY;
-  }
-  for (let y = sy; y <= sy + bh && y < qh - 1; y++) {
-    if (sx > 0)       q[y][sx]      = TILE.EMPTY;
-    if (sx + bw < qw) q[y][sx + bw] = TILE.EMPTY;
-  }
 }
 
 // --- Mirroring --------------------------------------------------------
