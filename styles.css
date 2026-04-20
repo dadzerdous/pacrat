@@ -61,14 +61,22 @@ body {
 
 #lives-row {
   display: flex;
-  gap: 10px;
   align-items: center;
   flex-shrink: 0;
+  gap: 4px;
 }
 
-#lives-label { font-size: 9px; margin-right: 4px; }
+#lives-label { font-size: 9px; flex-shrink: 0; }
 
-.life-icon { width: 18px; height: 18px; }
+#lives-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  align-items: center;
+  max-width: 220px; /* 10 icons × ~22px */
+}
+
+.life-icon { width: 18px; height: 18px; flex-shrink: 0; }
 
 #message {
   color: #FFD700;
