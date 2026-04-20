@@ -78,7 +78,7 @@ export class Renderer {
           ctx.shadowBlur = 0;
         } else if (t === TILE.EXIT) {
           // Draw exit — glows green when open, dim when locked
-          const open   = scene.maze.exitOpen;
+          const open   = maze.exitOpen;
           const pulse  = open ? 4 + Math.sin(this.#frame * 0.15) * 2 : 3;
           const color  = open ? '#00ff88' : '#1a5c3a';
           const glow   = open ? '#00ff88' : 'transparent';
