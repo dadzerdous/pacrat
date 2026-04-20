@@ -2,39 +2,35 @@
 // Top-level orchestrator. Owns every model object, wires callbacks between
 // them, and runs the tick loop via requestAnimationFrame.
 
-import { Maze }        from './maze.js';
-import { Player }      from './player.js';
-import { Ghost }       from './ghost.js';
-import { ghostTargets } from './ghostAI.js';
-import { Scheduler }   from './scheduler.js';
-import { Collisions }  from './collisions.js';
-import { StateMachine } from './stateMachine.js';
-import { LEVELS }      from './levels.js';
-import { CHARACTERS }  from './characters.js';
+import { Maze }          from './maze.js';
+import { Player }        from './player.js';
+import { Ghost }         from './ghost.js';
+import { ghostTargets }  from './ghostAI.js';
+import { Scheduler }     from './scheduler.js';
+import { Collisions }    from './collisions.js';
+import { StateMachine }  from './stateMachine.js';
+import { generateLevel, getLevelConfig } from './levelgen.js';
+import { CHARACTERS }    from './characters.js';
 
-const DEATH_PAUSE_MS    = 1500;
+const DEATH_PAUSE_MS = 1500;
 
-const GHOST_CONFIG = [
-  { name: 'blinky', color: '#FF0000', spawn: { x: 13, y: 11 }, targetFn: ghostTargets.blinky },
-  { name: 'pinky',  color: '#FFB8FF', spawn: { x: 13, y: 14 }, targetFn: ghostTargets.pinky  },
-  { name: 'inky',   color: '#00FFFF', spawn: { x: 12, y: 14 }, targetFn: ghostTargets.inky   },
-  { name: 'clyde',  color: '#FFB852', spawn: { x: 14, y: 14 }, targetFn: ghostTargets.clyde  },
+// All four ghost archetypes — sliced to ghostCount per level
+const GHOST_ARCHETYPES = [
+  { name: 'blinky', color: '#FF0000', targetFn: ghostTargets.blinky },
+  { name: 'pinky',  color: '#FFB8FF', targetFn: ghostTargets.pinky  },
+  { name: 'inky',   color: '#00FFFF', targetFn: ghostTargets.inky   },
+  { name: 'clyde',  color: '#FFB852', targetFn: ghostTargets.clyde  },
 ];
 
 export class Game {
   constructor({ renderer, input, hud, character = CHARACTERS[0] }) {
-    this.#renderer  = renderer;
-    this.#input     = input;
-    this.#hud       = hud;
-    this.#character = character;
-
+    this.#renderer   = renderer;
+    this.#input      = input;
+    this.#hud        = hud;
+    this.#character  = character;
     this.#levelIndex = 0;
-    this.#maze   = new Maze(LEVELS[0]);
-    this.#player = new Player(this.#character);
-    this.#ghosts = GHOST_CONFIG.map(cfg => new Ghost(cfg));
-    this.#blinky = this.#ghosts.find(g => g.name === 'blinky');
 
-    this.#scheduler = new Scheduler(this.#ghosts);
+    this.#loadLevel(0);
 
     this.#collisions = new Collisions({
       onScore:        (pts) => this.#addScore(pts),
@@ -52,7 +48,6 @@ export class Game {
       win:     { onEnter: () => this.#enterWin() },
     }, 'ready');
 
-    // Wire input callbacks
     this.#input.onDirection = (dir) => {
       const s = this.#states.current;
       if (s === 'ready' || s === 'over' || s === 'win') this.#handleStart();
@@ -73,8 +68,9 @@ export class Game {
   #maze; #player; #ghosts; #blinky;
   #scheduler; #collisions; #states;
   #score; #highScore; #lives; #levelIndex;
-  #godMode = false;
-  #freshStart = true; // true = needs full reset on start, false = resuming after death
+  #godMode    = false;
+  #freshStart = true;
+  #spawnPoint;
 
   // ---- Public -----------------------------------------------------------
 
@@ -84,6 +80,37 @@ export class Game {
       requestAnimationFrame(loop);
     };
     loop();
+  }
+
+  // ---- Level loading ----------------------------------------------------
+
+  #loadLevel(index) {
+    const cfg = getLevelConfig(index);
+    const { grid, playerSpawn, exitPos } = generateLevel(index);
+
+    this.#maze = new Maze(grid, exitPos);
+
+    // Store player spawn on maze so respawn can find it after a death
+    this.#maze.playerSpawn = playerSpawn;
+
+    // Ghost house centre — middle of the maze
+    this.#spawnPoint = {
+      x: Math.floor(this.#maze.cols / 2),
+      y: Math.floor(this.#maze.rows / 2) - 1,
+    };
+
+    this.#player = new Player(this.#character, playerSpawn);
+
+    const archetypes = GHOST_ARCHETYPES.slice(0, cfg.ghostCount);
+    this.#ghosts = archetypes.map(a => new Ghost({
+      name:     a.name,
+      color:    a.color,
+      targetFn: a.targetFn,
+      spawn:    this.#spawnPoint,
+      speed:    cfg.ghostSpeed,
+    }));
+    this.#blinky    = this.#ghosts.find(g => g.name === 'blinky') ?? this.#ghosts[0];
+    this.#scheduler = new Scheduler(this.#ghosts, this.#spawnPoint, cfg.exitDelays);
   }
 
   // ---- Tick loop --------------------------------------------------------
@@ -118,7 +145,11 @@ export class Game {
   }
 
   #checkWin() {
-    if (this.#maze.dotsRemaining === 0) this.#states.transition('win');
+    // Win = all dots eaten AND player steps on the exit tile
+    const [col, row] = this.#player.tile();
+    if (this.#maze.isOnExit(col, row)) {
+      this.#states.transition('win');
+    }
   }
 
   // ---- State handlers ---------------------------------------------------
@@ -134,7 +165,7 @@ export class Game {
         this.#states.transition('over');
       } else {
         this.#respawn();
-        this.#freshStart = false; // resuming — don't reset on next start press
+        this.#freshStart = false;
         this.#states.transition('ready');
       }
     }, DEATH_PAUSE_MS);
@@ -147,20 +178,26 @@ export class Game {
 
   #enterWin() {
     this.#updateHighScore();
-    this.#hud.setMessage(
-      this.#levelIndex < LEVELS.length - 1
-        ? 'LEVEL CLEAR! MOVE TO CONTINUE'
-        : 'YOU WIN! MOVE TO RESTART'
-    );
+    this.#hud.setMessage('LEVEL CLEAR! MOVE TO CONTINUE');
   }
 
   // ---- Lifecycle --------------------------------------------------------
 
+  /** Respawn player and ghosts on current maze — dots stay eaten. */
   #respawn() {
-    this.#player  = new Player(this.#character);
-    this.#ghosts  = GHOST_CONFIG.map(cfg => new Ghost(cfg));
-    this.#blinky  = this.#ghosts.find(g => g.name === 'blinky');
-    this.#scheduler = new Scheduler(this.#ghosts);
+    const cfg        = getLevelConfig(this.#levelIndex);
+    const archetypes = GHOST_ARCHETYPES.slice(0, cfg.ghostCount);
+
+    this.#player = new Player(this.#character, this.#maze.playerSpawn);
+    this.#ghosts = archetypes.map(a => new Ghost({
+      name:     a.name,
+      color:    a.color,
+      targetFn: a.targetFn,
+      spawn:    this.#spawnPoint,
+      speed:    cfg.ghostSpeed,
+    }));
+    this.#blinky    = this.#ghosts.find(g => g.name === 'blinky') ?? this.#ghosts[0];
+    this.#scheduler = new Scheduler(this.#ghosts, this.#spawnPoint, cfg.exitDelays);
     this.#collisions.resetCombo();
   }
 
@@ -171,18 +208,13 @@ export class Game {
     this.#freshStart = true;
     this.#hud.setScore(this.#score);
     this.#hud.setLives(this.#lives);
-    this.#maze.loadTemplate(LEVELS[0]);
-    this.#respawn();
+    this.#loadLevel(0);
   }
 
   #handleStart() {
     const s = this.#states.current;
     if (s === 'ready') {
-      if (this.#freshStart) {
-        // First start or restart after game over — full reset
-        this.#resetGame();
-      }
-      // Either way, start playing
+      if (this.#freshStart) this.#resetGame();
       this.#freshStart = false;
       this.#states.transition('playing');
     } else if (s === 'over') {
@@ -190,15 +222,10 @@ export class Game {
       this.#freshStart = false;
       this.#states.transition('playing');
     } else if (s === 'win') {
-      if (this.#levelIndex < LEVELS.length - 1) {
-        this.#levelIndex++;
-        this.#maze.loadTemplate(LEVELS[this.#levelIndex]);
-        this.#respawn();
-        this.#states.transition('playing');
-      } else {
-        this.#resetGame();
-        this.#states.transition('playing');
-      }
+      this.#levelIndex++;
+      this.#loadLevel(this.#levelIndex);
+      this.#freshStart = false;
+      this.#states.transition('playing');
     }
   }
 
@@ -213,8 +240,6 @@ export class Game {
       }, 1000);
     }
   }
-
-  // ---- Pause ------------------------------------------------------------
 
   #handlePause() {
     const s = this.#states.current;
