@@ -1,0 +1,12 @@
+updated todid
+deleted dev todo
+
+
+added splaSH PAGE
+loading splash from inside index first
+addd todid
+rat doesnt auto move
+can beging with a click
+
+
+worked on gyrorunner
