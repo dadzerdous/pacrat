@@ -74,6 +74,7 @@ export class Game {
   #scheduler; #collisions; #states;
   #score; #highScore; #lives; #levelIndex;
   #godMode = false;
+  #freshStart = true; // true = needs full reset on start, false = resuming after death
 
   // ---- Public -----------------------------------------------------------
 
@@ -133,7 +134,8 @@ export class Game {
         this.#states.transition('over');
       } else {
         this.#respawn();
-        this.#states.transition('ready'); // player must input to resume
+        this.#freshStart = false; // resuming — don't reset on next start press
+        this.#states.transition('ready');
       }
     }, DEATH_PAUSE_MS);
   }
@@ -166,6 +168,7 @@ export class Game {
     this.#score      = 0;
     this.#lives      = this.#character.lives;
     this.#levelIndex = 0;
+    this.#freshStart = true;
     this.#hud.setScore(this.#score);
     this.#hud.setLives(this.#lives);
     this.#maze.loadTemplate(LEVELS[0]);
@@ -174,8 +177,17 @@ export class Game {
 
   #handleStart() {
     const s = this.#states.current;
-    if (s === 'ready' || s === 'over') {
+    if (s === 'ready') {
+      if (this.#freshStart) {
+        // First start or restart after game over — full reset
+        this.#resetGame();
+      }
+      // Either way, start playing
+      this.#freshStart = false;
+      this.#states.transition('playing');
+    } else if (s === 'over') {
       this.#resetGame();
+      this.#freshStart = false;
       this.#states.transition('playing');
     } else if (s === 'win') {
       if (this.#levelIndex < LEVELS.length - 1) {
