@@ -53,6 +53,18 @@ export class Ghost extends Entity {
     this.tryMove(this.dir, maze);
   }
 
+  /** Use ghost-passable move check so ghosts can traverse the house. */
+  tryMove(dir, maze) {
+    const nx = maze.wrapX(this.x + dir[0] * this.speed);
+    const ny = this.y + dir[1] * this.speed;
+    if (maze.canGhostMove(nx, ny)) {
+      this.x = nx;
+      this.y = ny;
+      return true;
+    }
+    return false;
+  }
+
   /** Frightened ghosts use random targets — same algorithm, noisy input. */
   #randomTarget(maze) {
     return [
