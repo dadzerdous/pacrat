@@ -7,11 +7,10 @@ import { Entity } from './entity.js';
 import { DIR } from './constants.js';
 
 export class Player extends Entity {
-  /**
-   * @param character — entry from characters.js with speed and emoji.
-   */
-  constructor(character = { speed: 0.12, emoji: '🐀' }) {
-    super({ x: 13.5, y: 23, speed: character.speed, dir: DIR.LEFT });
+  constructor(character = { speed: 0.12, emoji: '🐀' }, spawn = null) {
+    const x = spawn ? spawn.x : 5;
+    const y = spawn ? spawn.y : 8;
+    super({ x, y, speed: character.speed, dir: DIR.LEFT });
 
     this.emoji        = character.emoji;
     this.nextDir      = null;
