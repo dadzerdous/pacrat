@@ -66,7 +66,7 @@ export function chooseNextDir(ghost, target, maze) {
 
     const nx = ghost.x + d[0];
     const ny = ghost.y + d[1];
-    if (!maze.isPassableTile(nx, ny)) continue; // no walls
+    if (!maze.isGhostPassableTile(nx, ny)) continue; // no walls
 
     const dx = nx - target[0];
     const dy = ny - target[1];
