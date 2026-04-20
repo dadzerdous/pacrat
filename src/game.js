@@ -130,7 +130,7 @@ export class Game {
       this.#hud.setLives(this.#lives);
     }
     this.#states.setTimer(() => {
-      if (this.#lives < 0 && !this.#godMode) {
+      if (this.#lives <= 0 && !this.#godMode) {
         this.#states.transition('over');
       } else {
         this.#respawn();
