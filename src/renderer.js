@@ -26,6 +26,13 @@ export class Renderer {
    */
   draw(scene) {
     this.#frame++;
+
+    // Resize canvas to fit current maze dimensions
+    const targetW = scene.maze.cols * CELL;
+    const targetH = scene.maze.rows * CELL;
+    if (this.#canvas.width !== targetW)  this.#canvas.width  = targetW;
+    if (this.#canvas.height !== targetH) this.#canvas.height = targetH;
+
     this.#clear();
     this.#drawMaze(scene.maze);
     this.#drawPlayer(scene.player);
@@ -69,6 +76,29 @@ export class Renderer {
           ctx.arc(x + CELL / 2, y + CELL / 2, pulse, 0, Math.PI * 2);
           ctx.fill();
           ctx.shadowBlur = 0;
+        } else if (t === TILE.EXIT) {
+          // Draw exit — glows green when open, dim when locked
+          const open   = scene.maze.exitOpen;
+          const pulse  = open ? 4 + Math.sin(this.#frame * 0.15) * 2 : 3;
+          const color  = open ? '#00ff88' : '#1a5c3a';
+          const glow   = open ? '#00ff88' : 'transparent';
+          ctx.fillStyle   = color;
+          ctx.shadowColor = glow;
+          ctx.shadowBlur  = open ? 16 : 0;
+          ctx.beginPath();
+          // Star-ish shape using two overlapping rects rotated
+          ctx.save();
+          ctx.translate(x + CELL / 2, y + CELL / 2);
+          ctx.rotate(this.#frame * (open ? 0.03 : 0));
+          ctx.fillRect(-pulse, -pulse, pulse * 2, pulse * 2);
+          ctx.rotate(Math.PI / 4);
+          ctx.fillRect(-pulse * 0.7, -pulse * 0.7, pulse * 1.4, pulse * 1.4);
+          ctx.restore();
+          ctx.shadowBlur = 0;
+        } else if (t === TILE.HOUSE) {
+          // Ghost house interior — subtle dark tint
+          ctx.fillStyle = '#110022';
+          ctx.fillRect(x, y, CELL, CELL);
         }
       }
     }
