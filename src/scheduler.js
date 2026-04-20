@@ -8,60 +8,57 @@
 
 import { FRIGHT_FRAMES } from './constants.js';
 
-const SCATTER_FRAMES = 300; // ~5 s at 60 fps
-const CHASE_FRAMES   = 600; // ~10 s at 60 fps
-
-const HOUSE_EXIT_FRAMES = {
-  blinky: 0,
-  pinky:  120,
-  inky:   240,
-  clyde:  360,
-};
-
+const SCATTER_FRAMES = 300;
+const CHASE_FRAMES   = 600;
 const EATEN_RETURN_SPEED = 0.25;
-const GHOST_SPAWN  = { x: 13, y: 14 };
 const ARRIVAL_DIST = 0.2;
 
 export class Scheduler {
-  constructor(ghosts) {
-    this.#ghosts = ghosts;
-    this.#mode = 'scatter';
-    this.#modeTimer = 0;
+  /**
+   * @param ghosts     — ghost entities
+   * @param spawnPoint — { x, y } ghost house centre for this level
+   * @param exitDelays — array of frame delays per ghost index before leaving house
+   */
+  constructor(ghosts, spawnPoint, exitDelays = [0, 120, 240, 360]) {
+    this.#ghosts     = ghosts;
+    this.#spawn      = spawnPoint;
+    this.#mode       = 'scatter';
+    this.#modeTimer  = 0;
     this.#frightTimer = 0;
-    this.#houseTimers = { ...HOUSE_EXIT_FRAMES };
+
+    // Build house timers keyed by ghost name in order
+    this.#houseTimers = {};
+    ghosts.forEach((g, i) => {
+      this.#houseTimers[g.name] = exitDelays[i] ?? 0;
+    });
   }
 
-  #ghosts;
-  #mode;
-  #modeTimer;
-  #frightTimer;
-  #houseTimers;
+  #ghosts; #spawn;
+  #mode; #modeTimer; #frightTimer; #houseTimers;
 
-  get mode()        { return this.#mode; }
-  get frightTimer() { return this.#frightTimer; }
-  get isFrightened(){ return this.#frightTimer > 0; }
+  get mode()         { return this.#mode; }
+  get frightTimer()  { return this.#frightTimer; }
+  get isFrightened() { return this.#frightTimer > 0; }
 
-  /** Called when the player eats a power pellet.
-   *  @param frightFrames — override duration from character stats
-   */
   onPelletEaten(frightFrames = FRIGHT_FRAMES) {
     this.#frightTimer = frightFrames;
     for (const g of this.#ghosts) {
       if (g.lifeState === 'alive') {
         g.frighten();
-        g.dir = [-g.dir[0], -g.dir[1]]; // immediately reverse
+        g.dir = [-g.dir[0], -g.dir[1]];
       }
     }
   }
 
-  /** Called when the player dies — resets frightened and house timers. */
   onPlayerDeath() {
     this.#frightTimer = 0;
     for (const g of this.#ghosts) g.unfrighten();
-    this.#houseTimers = { ...HOUSE_EXIT_FRAMES };
+    // Reset house timers
+    this.#ghosts.forEach((g, i) => {
+      this.#houseTimers[g.name] = 0; // re-release immediately after death
+    });
   }
 
-  /** Main per-frame tick. Call only when state is 'playing'. */
   tick() {
     this.#advanceScatterChase();
     this.#advanceFrightened();
@@ -69,13 +66,10 @@ export class Scheduler {
     this.#advanceEatenReturns();
   }
 
-  /** True when the given ghost is allowed to move. */
   canGhostMove(ghost) {
     const t = this.#houseTimers[ghost.name];
     return t === undefined || t <= 0;
   }
-
-  // ---- Private ----------------------------------------------------------
 
   #advanceScatterChase() {
     this.#modeTimer++;
@@ -109,10 +103,9 @@ export class Scheduler {
       const t = this.#houseTimers[g.name];
       if (t === undefined || t <= 0) continue;
       this.#houseTimers[g.name]--;
-
       if (this.#houseTimers[g.name] === 0) {
-        g.x = GHOST_SPAWN.x;
-        g.y = GHOST_SPAWN.y;
+        g.x = this.#spawn.x;
+        g.y = this.#spawn.y;
         g.dir = [-1, 0];
         g.lastDecisionTile = null;
       }
@@ -122,14 +115,12 @@ export class Scheduler {
   #advanceEatenReturns() {
     for (const g of this.#ghosts) {
       if (g.lifeState !== 'eaten') continue;
-
-      const dx = GHOST_SPAWN.x - g.x;
-      const dy = GHOST_SPAWN.y - g.y;
+      const dx   = this.#spawn.x - g.x;
+      const dy   = this.#spawn.y - g.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-
       if (dist < ARRIVAL_DIST) {
-        g.x = GHOST_SPAWN.x;
-        g.y = GHOST_SPAWN.y;
+        g.x = this.#spawn.x;
+        g.y = this.#spawn.y;
         g.dir = [-1, 0];
         g.lastDecisionTile = null;
         g.revive();
